@@ -103,20 +103,7 @@ static HDC memDC;
 static HDC hdc;
 static UINT16 the_Option[5] = { 0, };
 
-static inline unsigned _stdcall KeylistToMemory(void* arg) {
-	if (the_Option[1] == 1) {
-		while(*(memory + *(the_Option + 4))) {
-			*(memory + *(the_Option + 3)) = *(KeyList + *(the_Option + 2));
-		}
-	}
-	else {
-		while (*(memory + *(the_Option + 4))) {
-			for (int counting = 0; counting < 7; counting++) {
-				*(memory + *(the_Option + 3)) = *(KeyList + counting);
-			}
-		}
-	}
-}
+
 
 //
 
