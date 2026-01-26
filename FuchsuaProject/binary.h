@@ -240,8 +240,7 @@ inline unsigned char cdmb_MemoryMap() {
 		if (fgetc(Memory + 0x00000003) == 0x01) { //읽기
 			fputc(
 				fgetc(
-					(
-						*(Disk + fgetc(Memory + 0x00000002)) + cdmb_MemoryAddressShift(
+					(*(Disk + fgetc(Memory + 0x00000002)) + cdmb_MemoryAddressShift(
 							fgetc(Memory + 0x00000004),
 							fgetc(Memory + 0x00000005),
 							fgetc(Memory + 0x00000006),
