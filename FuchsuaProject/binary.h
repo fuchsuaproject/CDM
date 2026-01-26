@@ -1,49 +1,53 @@
-﻿/*
- ################
- # STACK의 예제 #
- ################
- └ ###############################################
- │ # 1 # // {                                    #
- │ # 2 #	스택 사용에 대한 예제                 #
- │ # 3 #	현재 스택은 다음과 같이 비어있습니다. #
- │ # 4 # }                                       #
- │ #                                             #
- │ ###############################################
- │ 
- └ #########
- │ #       #
- │ # #   # #
- │ # #   # #
- │ # #   # #
- │ # #   # #
- │ # #   # #
- │ # ##### #
- │ #       #
- │ #########
- │ 
- └ #############################################
- │ # 1 # // {                                  #
- │ # 2 #	여기에서 스택에 2를 푸쉬하겠습니다. #
- │ # 3 # }                                     #
- │ # 4 $                                       #
- │ # 5 # PUSH 1 2                              #
- │ #                                           #
- │ #############################################
- │ 
- └ #########
-    #       #
-	# #   # #
-	# #   # #
-	# #   # #
-	# ##### #
-	# # 2 # #
-	# ##### #
-	#       #
-	#########
-*/
+﻿// Created by Fuchsua on 2022-10-13 22:23:28.
 #pragma once
 #ifndef binary_hh
 #define binary_hh
+
+// NKB에 대한 기본적인 설명
+
+// NKB는 "Neo Kompiler Bahasa"의 약자로, Fuchsua 프로젝트에서 개발한
+// 함수형 프로그래밍 언어입니다. NKB는 간결하고 효율적인 문법을 제공하여
+// 개발자가 복잡한 알고리즘과 로직을 쉽게 구현할 수 있도록 설계되었습니다.
+
+// NKB의 주요 특징은 다음과 같습니다:
+// 1. 함수형 프로그래밍: NKB는 함수형 프로그래밍 패러다임을 따르며,
+//	고차 함수, 익명 함수, 재귀 등을 지원합니다.
+// 2. 간결한 문법: NKB는 직관적이고 간결한 문법을 제공하여,
+//	개발자가 빠르게 코드를 작성할 수 있도록 돕습니다.
+// 3. 강력한 타입 시스템: NKB는 정적 타입 시스템을 채택하여,
+//	컴파일 타임에 타입 오류를 검출할 수 있습니다.
+// 4. 확장성: NKB는 다양한 라이브러리와 모듈을 지원하여,
+//	개발자가 필요에 따라 기능을 확장할 수 있습니다.
+// 5. 적은 컴파일러 옵션: NKB는 코드 내부에서 옵션을 설정할 수 있어,
+//	컴파일러 옵션을 최소화합니다.
+
+/* 예제(Hello world + arg printing) */
+// export bin/exemple/a
+// import lib/std/std
+// Public Class Main {
+//     Public Naneged void main(Class arg) {
+//         print("Hello world"%+arg.str[1]);
+//     }
+// }
+
+// NKB Compile
+// NKB는 소스 코드를 파싱하여 중간 표현(IR)으로 변환한 후,
+// 기계어로 컴파일합니다. NKB 컴파일러는 최적화된 코드를 생성하여,
+// 효율적인 실행을 보장합니다.
+
+// NKB Windows로 쓰여진 어플리케이션 설치 과정
+// 1. NKB 패키지 파일을 다운로드한다. (예: nkb_package.np)
+// 2. 패키지 파일을 CDM 셸에서 설치 명령어를 사용하여 설치한다.
+//   예: install nkb_package.np
+// 3. 설치가 완료되면, NKB 어플리케이션을 실행할 수 있다.
+
+// Q: 그러면 설치된 패키지는 어디에 저장되나요?
+// A: 기본적으로 C:\CDM\NKB\windows.np나 사용자가 지정한 경로에 저장됩니다.
+// Q: 설치된 패키지를 제거하려면 어떻게 하나요?
+// A: CDM 셸에서 제거 명령어를 사용하여 패키지를 제거할 수 있습니다.
+//   예: uninstall nkb_package.np
+
+// 자세한 내용은 Fuchsua 프로젝트의 공식 문서를 참고하시기 바랍니다.
 
 #include"version.h"
 
@@ -172,92 +176,59 @@ inline void setcursortype(CURSOR_TYPE c) {
 #ifndef NO_BINARY
 #define NO_BINARY
 
-unsigned char K0, K1, K2, K3, K4, K5 = 0;
 
-unsigned char MAR0, MAR1, MAR2, MAR3 = 0;
-unsigned char MDR = 0;
+char** compiler_option;
 
-char StackSize = 0x01;
-char* Stack = NULL;
+inline unsigned char cdmb_Memory(char Register1, char Register2, char Register3, char Register4);
 
-FILE* Memory = NULL;
-FILE* PCI = NULL;
-FILE** Disk = ((FILE**)0);
+extern char* option;
+inline unsigned char cdmb_Main(char* a) {
+	// NKB 컴파일러 메인 함수
+	// 컴파일러	초기화
+	cdmb_Memory(0x00, 0x00, 0x00, 0x00);
+	// 옵션 파싱 시작
+	// 옵션 예시: "directory=src/com/example/example;output=bin/;type=package"
+	// 옵션 종류
+	// 1. directory: 소스 코드 디렉토리 지정
+	// 2. output: 출력 디렉토리 지정
+	// 3. type: 컴파일 타입 지정 (예: executable, library, package)
+	// 4. optimize: 최적화 레벨 지정 (예: none, basic, full)
+	// 5. debug: 디버그 정보 포함 여부 (예: true, false)
 
-int count = 1;
+	// 세미클론(;)을 기준으로 옵션 분리 및 중복 제거
+	int i = 0;
+	while (1) { // 세미클론(;) 개수 세어보기
+		if (a[i] == ';') {
+			i++;
+			continue;
+		}
+		else if (a[i] == '\0') {
+			break;
+		}
+		else {
+			continue;
+		}
+	}
+	compiler_option = (char**)malloc(sizeof(char*) * i); // 최대 i개 옵션 저장
+	int option_index = 0;// 옵션 인덱스
+	char* token_ptr = strtok(a, ";");
+	while (token_ptr != NULL) {
+		compiler_option[option_index] = (char*)malloc(sizeof(char) * (strlen(token_ptr) + 1));
+		strcpy(compiler_option[option_index], token_ptr);
+		option_index++;
+		token_ptr = strtok(NULL, ";");
+	}
 
-inline unsigned char cdmb_Memory(char Register1, char Register2, char Register3, char Register4) {
-	unsigned int MemoryAddress = 0x00000000;
-	MemoryAddress += ((int)Register1) << 32;
-	MemoryAddress += ((int)Register2) << 24;
-	MemoryAddress += ((int)Register3) << 16;
-	MemoryAddress += ((int)Register4) << 8;
-	Memory = fopen("RRM", "wb+");
-	//fseek(Memory, (long)MemoryAddress, SEEK_SET);
-	MDR = fgetc((Memory + MemoryAddress));
-	fclose(Memory);
-}
+	// TODO: 옵션 처리 로직 구현
 
-inline unsigned char cdmb_Push();
-inline unsigned char cdmb_Pop();
-
-inline unsigned char cdmb_MemoryMap();
-inline unsigned char cdmb_Parsing();
-
-inline unsigned char cdmb_Main() {
-	Stack = malloc(sizeof(char) * StackSize);
-	count++;
-	Disk = malloc(sizeof(FILE*) * count);
-	//Memory = fopen("RM", "wb+");
-
-	*(Disk) = fopen("ROM", "rb");
-	
-	cdmb_MemoryMap();
-	cdmb_Parsing();
+	return 0;
 
 	//
 }
 
-inline unsigned int cdmb_MemoryAddressShift(char a, char b, char c, char d) {
-	unsigned int MemoryAddress = 0x00000000;
-	MemoryAddress += (int)a << 32;
-	MemoryAddress += (int)b << 24;
-	MemoryAddress += (int)c << 16;
-	MemoryAddress += (int)d << 8;
-	return MemoryAddress;
-}
-
-inline unsigned char cdmb_MemoryMap() {
-	unsigned int MemoryAddress = 0x00000000;
-	char FA1, FA2, FA3, FA4, MA1, MA2, MA3, MA4 = 0;
-	//cdmb_MemoryAddressShift(FA1, FA2, FA3, FA4);
-
-	Memory = fopen("RRM", "wb+");
-	char data = 0;
-	//qwertyuiopasdfghjkl;zxcvbnm,.
-	data = fgetc(Memory + 0x00000001);
-	if (data == 0x01) {
-		if (fgetc(Memory + 0x00000003) == 0x01) { //읽기
-			fputc(
-				fgetc(
-					(*(Disk + fgetc(Memory + 0x00000002)) + cdmb_MemoryAddressShift(
-							fgetc(Memory + 0x00000004),
-							fgetc(Memory + 0x00000005),
-							fgetc(Memory + 0x00000006),
-							fgetc(Memory + 0x00000007)
-						)
-					)
-				),
-				Memory + cdmb_MemoryAddressShift(
-					fgetc(Memory + 0x00000008),
-					fgetc(Memory + 0x00000009),
-					fgetc(Memory + 0x0000000a),
-					fgetc(Memory + 0x0000000b)
-				)
-			);
-		}
-	}
-}
-
 #endif //NO_BANARY
 #endif
+
+
+
+// Created by Fuchsua on 2022-10-13 22:23:28.
