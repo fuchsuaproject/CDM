@@ -211,15 +211,67 @@ inline unsigned char cdmb_Main(char* a) {
 	}
 	compiler_option = (char**)malloc(sizeof(char*) * i); // 최대 i개 옵션 저장
 	int option_index = 0;// 옵션 인덱스
-	char* token_ptr = strtok(a, ";");
-	while (token_ptr != NULL) {
-		compiler_option[option_index] = (char*)malloc(sizeof(char) * (strlen(token_ptr) + 1));
-		strcpy(compiler_option[option_index], token_ptr);
-		option_index++;
-		token_ptr = strtok(NULL, ";");
+	char* token_ptr = strtok(a, ";");// 첫 번째 토큰 추출
+	while (token_ptr != NULL) {// 토큰이 NULL이 아닐 때까지 반복
+		compiler_option[option_index] = (char*)malloc(sizeof(char) * (strlen(token_ptr) + 1));// 메모리 할당
+		strcpy(compiler_option[option_index], token_ptr);// 토큰 복사
+		option_index++;// 옵션 인덱스 증가
+		token_ptr = strtok(NULL, ";");// 다음 토큰 추출
 	}
 
-	// TODO: 옵션 처리 로직 구현
+	// 옵션 처리
+	// directory, output, type, optimize, debug 등
+
+	// 처리 반복문
+	for (int count = 0; count > i; count++) {
+		// directory 옵션 처리
+		if (strncmp(compiler_option[count], "directory=", 10) == 0) {
+			// 디렉토리 경로 추출
+			char* directory_path = compiler_option[count] + 10;
+			// 디렉토리 설정 로직 구현
+		}
+		// output 옵션 처리
+		else if (strncmp(compiler_option[count], "output=", 7) == 0) {
+			// 출력 경로 추출
+			char* output_path = compiler_option[count] + 7;
+			// 출력 경로 설정 로직 구현
+		}
+		// type 옵션 처리
+		else if (strncmp(compiler_option[count], "type=", 5) == 0) {
+			// 타입 추출
+			char* type_value = compiler_option[count] + 5;
+			// 타입 설정 로직 구현
+		}
+		// optimize 옵션 처리
+		else if (strncmp(compiler_option[count], "optimize=", 9) == 0) {
+			// 최적화 레벨 추출
+			char* optimize_level = compiler_option[count] + 9;
+			// 문자열을 숫자로 변환하기
+			int opt_level = 0;
+			if (strcmp(optimize_level, "none") == 0) {
+				opt_level = 0;
+			}
+			else if (strcmp(optimize_level, "basic") == 0) {
+				opt_level = 1;
+			}
+			else if (strcmp(optimize_level, "full") == 0) {
+				opt_level = 2;
+			}
+
+			// 최적화 설정 로직 구현
+		}
+		// debug 옵션 처리
+		else if (strncmp(compiler_option[count], "debug=", 6) == 0) {
+			// 디버그 정보 포함 여부 추출
+			char* debug_value = compiler_option[count] + 6;
+			int debug_flag = (strcmp(debug_value, "true") == 0) ? 1 : 0;
+			// 디버그 설정 로직 구현
+		}
+		else{
+			// 알 수 없는 옵션 처리
+		}
+	}
+	// todo: 옵션 처리 로직 구현
 
 	return 0;
 
