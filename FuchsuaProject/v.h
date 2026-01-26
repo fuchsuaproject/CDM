@@ -18,6 +18,7 @@
 #include<windows.h>//include "windows.h"
 #include<process.h>
 #include<io.h>
+#include<stdlib.h>
 //#include<Skout.h>
 
 #define clss system("cls")
