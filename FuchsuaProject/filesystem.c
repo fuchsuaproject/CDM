@@ -50,6 +50,8 @@ int maxCacheEntries = 100; // 최대 캐시 엔트리 수
 CRITICAL_SECTION cacheCriticalSection; // 캐시 접근을 위한 크리티컬 섹션
 //#endif
 
+// sas
+
 // 함수 정의
 unsigned short sectorSizeTemp(unsigned short sectorSize, char* buffer) {
 	//malloc
@@ -115,7 +117,21 @@ char WriteSector(FILE* diskFile, int sectorNumber, char* data) {
 		sectorSizeTemp(SECTOR_SIZE, sectorBuffer);
 	}
 	fseek(diskFile, sectorNumber * sectorSize, SEEK_SET);
-	fwrite(data, SECTOR_SIZE, sectorSize, diskFile);
+	fwrite(data, SECTOR_SIZE, 1, diskFile);
+	// 여기에서 잘못된 것은?
+	// fwrite(data, SECTOR_SIZE, sectorSize, diskFile);
+	// 첫 번째 인자는 버퍼 포인터
+	// 아니 일단 그래서 3번째 인자를 1로 수정해야함?
+	// 맞아 3번째 인자는 블록 개수임
+	// 즉, 한 번에 몇 블록을 쓸 것인지
+	// 그래서 1로 해야지
+	// 그러면 전체 코드 보면 이렇게 잘못된 부분이 있나?
+	// 아니면 for문의 <, >, <=, >= 이런 부분이 잘못된 것이 있나?
+	// A: 지금까지 본 바로는 없어 보임
+	// Q: 아 그래? 그럼 다행이다
+	// A: 응응
+	// Q: 고마워
+	// A: 천만에
 	return 0;
 }
 
@@ -273,6 +289,7 @@ char formatPartition(FILE* diskFile, int totalSectors, int partitionNumber, char
 	deletePartition(diskFile, partitionNumber, entry->startSector);
 	createPartition(diskFile, partitionNumber, entry->startSector, totalSectors, partitionLabel);
 	return 0;
+	//entry[0]->partitionLabel
 }
 
 char setCSPTBootBinary(FILE* diskFile, char* bootBinaryPath) {
@@ -361,3 +378,111 @@ char deletePartition(FILE* diskFile, int partitionNumber, unsigned long long sta
 	return 0; // 성공 시 0 반환
 }
 //todo: createPartition, deletePartition이 createCSPTPartition, deleteCSPTPartition를 사용해야합니다.
+//todo: 파일 생성, 삭제, 수정 및 디렉토리 생성, 삭제, 수정에 관한 함수 정의
+
+char testCreateFile() {
+	mountDisk(mountedDisk, "test.np");
+	// 몰라 이거 버려어어어...
+	return 0;
+}
+
+char mountDisk(FILE* diskFile, char* diskImagePath) {
+	char exists = cdm_FileExists(diskImagePath);
+	// if문
+	if (!exists) {
+		return 1;
+	}
+	diskFile = fopen(diskImagePath, "wb+");
+	return 0;
+}
+
+char formatDisk(FILE* diskFile, int totalSectors, int sectorSize) {
+	// 디스크 포맷 로직 구현
+	for (int i = 0; i < totalSectors; i++) {
+		// 섹터 초기화
+		for (int j = 0; j < sectorSize; j++) {
+			sectorBuffer[j] = 0; // 버퍼 초기화
+		}
+		fseek(diskFile, i * sectorSize, SEEK_SET);
+		fwrite(sectorBuffer, sectorSize, 1, diskFile);
+		// Q: 왜 1인가?
+		// A: fwrite 함수의 세 번째 인자는 쓰기 횟수입니다. 여기서는 한 번에 하나의 섹터를 쓰므로 1로 설정합니다.
+		// Q: 그러면 512로 쓰면 죽나요?
+		// A: 아니요, 죽지 않습니다. 하지만 그렇게 하면 512개의 섹터를 한 번에 쓰게 되어 디스크 공간을 초과할 수 있습니다.
+		// Q: fwrite 함수의 두 번째 인자는 무엇인가?
+		// A: fwrite 함수의 두 번째 인자는 쓰기 단위 크기입니다. 여기서는 섹터 크기만큼 씁니다.
+	}
+	return 0; // 성공 시 0 반환
+}
+
+/*
+CSFS Claster Bitset
+
+Bitset  | Name			         | Size (bits) | Description
+--------|------------------------|-------------|-----------------------------
+b0      | Cracked                | 1           | 클러스터가 손상되었는지 여부
+b1-b3   | Reserved               | 3           | 예약 비트
+b4-b19  | Next Cluster Top 16bit | 16          | 다음 클러스터의 상위 16비트
+b20     | End of File (EOF)      | 1           | 파일의 끝을 나타내는 비트
+b21     | Directory              | 1           | 디렉토리 여부를 나타내는 비트
+b22     | Used                   | 1           | 클러스터가 사용 중인지 여부
+b23-b47 | Reserved               | 25          | 예약 비트
+b48-b63 | Next Cluster Low 9bit  | 16          | 다음 클러스터의 하위 16비트
+* 총 크기: 64 비트 (8 바이트)
+*/
+
+char findPath(char* path, int* sector) {
+	// 경로 파싱 전 파티션 번호 확인
+	char* token = strtok(path, "/");
+	if (token == NULL) {
+		return 1; // 잘못된 경로
+	}
+	else if (strlen(token) != 1 || token[0] < '0' || token[0] > '7') {
+		return 2; // 잘못된 파티션 번호
+	}
+	int partitionNumber = token[0] - '0';
+	// 파티션 시작 섹터 계산
+	unsigned long long partitionStartSector = 0;
+	cspt_OffsetTable* cspt = NULL;
+	ReadSector(mountedDisk, 0); // CSPT 헤더 읽기
+	if (strncmp(sectorBuffer, "CSPTBL", 6) != 0) {
+		return 3; // CSPT가 존재하지 않음
+	}
+	cspt = (cspt_OffsetTable*)sectorBuffer;// CSPT 구조체 포인터 설정
+	cspt_PartitionEntry* entry = (cspt_PartitionEntry*)&cspt->partitionEntries[partitionNumber * 16];
+	partitionStartSector = entry->startSector;
+
+	// 루트 디렉터리 클러스터 번호 가져오기 및 섹터 계산
+	unsigned int rootDirCluster = getRootDirectoryCluster(partitionNumber, mountedDisk);// 루트 디렉터리 클러스터 번호 가져오기
+	unsigned long long currentSector = partitionStartSector + (rootDirCluster * getClusterSectorCount(mountedDisk, partitionNumber));// 루트 디렉터리 섹터 계산
+	// 경로 파싱 및 디렉터리 탐색
+	// * 모든 디렉토리 클러스터는 2개의 클러스터로 구성되어 있다.(출처: QST-1001-4359 공식 문서)
+	// 1. 2번째 루트 디렉토리 클러스터 비트에서 가리키는 클러스터 공간 읽기
+	// 2. 그 공간에는 배열이 있음
+	// 3. 배열에는 디렉터리 엔트리와 파일 엔트리를 가리키는 포인터들이 있음
+	// 4. 디렉터리 엔트리와 파일 엔트리를 읽어서 토큰과 비교
+	// 5. 일치하는 디렉터리가 있으면 해당 디렉터리의 시작 섹터로 이동
+	// 6. 없으면 오류 반환
+	// 7. 다음 토큰으로 이동
+	// 8. 토큰이 없을 때까지 반복
+	// 9. 마지막 토큰이 파일이면 해당 파일의 시작 섹터 반환
+	// 10. 마지막 토큰이 디렉터리이면 해당 디렉터리의 시작 섹터 반환
+	// 11. 오류 발생 시 적절한 오류 코드 반환
+	// lo99r
+	while ((token = strtok(NULL, "/")) != NULL) {
+		// 디렉터리 엔트리 검색 로직 구현
+		// 현재 섹터에서 디렉터리 엔트리를 읽고 토큰과 비교
+		// 일치하는 디렉터리가 있으면 해당 디렉터리의 시작 섹터로 이동
+		// 없으면 오류 반환
+
+		// 0. 클러스터 비트를 읽어서 다음 클러스터 번호 알아내기
+		unsigned int nextCluster = 
+		if (nextCluster == 0xFFFFFFFF) {
+			return 4; // 오류 발생
+		}
+		currentSector = partitionStartSector + (nextCluster * getClusterSectorCount(mountedDisk, partitionNumber));
+		//todo: 디렉터리 엔트리 읽기 및 토큰과 비교 로직 구현
+	}
+	*sector = currentSector;
+	return 0; // 성공 시 0 반환
+}

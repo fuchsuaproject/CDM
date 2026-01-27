@@ -196,20 +196,26 @@ char* cdm_ReadFile(char* filename);// 파일 읽기
 void cdm_WriteFile(char* filename, char* data);// 파일 쓰기
 
 // 파일 시스템 함수들
-void formatDisk(FILE* diskFile, int totalSectors, int sectorSize);
-int createFile(FILE* diskFile, char* filename, char* data);
-char* readFile(FILE* diskFile, char* filename);
-int deleteFile(FILE* diskFile, char* filename);
-void listFiles(FILE* diskFile);
-void defragmentDisk(FILE* diskFile);
-void mountDisk(char* diskImagePath);
-void createDirectory(char* dirName);
+char formatDisk(FILE* diskFile, int totalSectors, int sectorSize);// 디스크 포맷
+int createFile(FILE* diskFile, char* filename);// 파일 생성
+int getFileSize(FILE* diskFile, char* filename);// 파일 크기 가져오기
+int getFilePartitionNumber(FILE* diskFile, char* filename);// 파일이 속한 파티션 번호 가져오기
+int getFilleSectorCount(FILE* diskFile, char* filename);// 파일이 차지하는 섹터 수 가져오기
+int writeFile(FILE* diskFile, char* filename, char* data);// 파일 쓰기
+char* readFile(FILE* diskFile, char* filename);// 파일 읽기
+int deleteFile(FILE* diskFile, char* filename);// 파일 삭제
+void listFiles(FILE* diskFile);// 파일 목록 나열
+void defragmentDisk(FILE* diskFile);// 디스크 조각 모음
+char mountDisk(FILE* diskFile, char* diskImagePath);// 디스크 이미지 마운트
+void createDirectory(char* dirName);// 디렉토리 생성
+void findPath(char* path, int* sector);// 경로 찾기
+// 경로 예시: "1/dir/subdir/file.txt"
+
+char testCreateFile();// 테스트용 파일 생성 함수(버려써...)
 
 // Partition 함수들
 char createPartition(FILE* diskFile, int partitionNumber, unsigned long long startSector, unsigned long long totalSectors, char* partitionLabels);
 char deletePartition(FILE* diskFile, int partitionNumber, unsigned long long startSector);
-char listPartitions(FILE* diskFile);
-char resizePartition(FILE* diskFile, int partitionNumber, unsigned long long newTotalSectors);
 char formatPartition(FILE* diskFile, int totalSectors, int partitionNumber, char* partitionLabel);
 
 // 요아니 요요아니 요요요아니 요요요요아니 요요요요요아니
@@ -223,7 +229,7 @@ unsigned short getSectorSize(FILE* diskFile);
 unsigned short getClusterSectorCount(FILE* diskFile, int partitionNumber);
 unsigned long long getTotalSectors(FILE* diskFile, int partitionNumber);
 unsigned long long getFreeSectors(FILE* diskFile);
-unsigned int getRootDirectoryCluster(FILE* diskFile);
+unsigned int getRootDirectoryCluster(int partitionNumber, FILE* diskFile);
 
 // 섹터 크기 임시
 unsigned short sectorSizeTemp(unsigned short sectorSize, char* buffer);
