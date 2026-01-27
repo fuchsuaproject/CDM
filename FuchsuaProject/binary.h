@@ -271,7 +271,8 @@ inline unsigned char cdmb_Main(char* a) {
 			// 알 수 없는 옵션 처리
 		}
 	}
-	// todo: 옵션 처리 로직 구현
+	// 다음 단계로 진행
+
 
 	return 0;
 
