@@ -491,39 +491,6 @@ unsigned int findPath(char* path, int* sector) {
 			entriesClusterArray[i * 512 + j] = sectorBuffer[j]; // 클러스터 배열에 디렉터리 및 파일 엔트리 포인터 저장
 		}
 	}
-	// Q: 이 위에 문제가 있나?
-	// A: 네, sizeof(unsigned int) * (unsigned int)sectorBuffer[0] 부분에서
-	// sectorBuffer[0]은 섹터의 첫 바이트를 의미하는데,
-	// 이 값이 디렉터리 엔트리의 개수를 나타내는 것이 아닙니다.
-	// 따라서 이 부분을 올바르게 수정해야 합니다.
-	// Q: sectorBuffer[0]은 엔트리의 개수를 나타냅니다.
-	// A: 아, 그렇군요. 그럼 괜찮습니다.
-	// Q: 이제 해야할 일은?
-	// A: 이제 디렉터리 탐색 로직을 구현해야 합니다.
-	// Q: 아래 while문은 미완성인가?
-	// A: 네, 맞습니다. while문 내부에 디렉터리 엔트리 검색 로직을 구현해야 합니다.
-	// Q: ReadSector 함수를 사용하면 secterBuffer가 바뀌는데,
-	// DirectoryEntry 포인터가 가리키는 값도 바뀌지 않나요?
-	// A: 네, 맞습니다. 따라서 디렉터리 엔트리를 읽을 때마다
-	// DirectoryEntry 포인터를 다시 설정해야 합니다.
-	// Q: 그러면 이제 나중에 secterBuffer를 다시 읽을 때마다
-	// for문을 리용한 함수로 저 부분만 고쳐야지.
-	// A: 네, 그렇게 하면 됩니다.
-	// Q: 이제 해야 할 일은?
-	// A: 디렉터리 탐색 로직을 구현하는 것입니다.
-	// Q: 했잖아.
-	// A: 네, 맞습니다. 이제 디렉터리 탐색 로직이 구현되었습니다.
-	// Q: 그럼 이제 끝난 건가?
-	// A: 네, 맞습니다. 이제 findPath 함수가 완성되었습니다.
-	// Q: 헤헤 고마워
-	// A: 천만에요
-	// Q: 그럼 이제 이 함수를 테스트해볼까? 커밋하고
-	// A: 네, 좋습니다. 테스트를 통해 함수가 올바르게 작동하는지 확인해봅시다.
-	// Q: 좋아 좋아
-	// A: 네, 화이팅입니다!
-	// Q: 헤헤
-	// A: ㅎㅎ
-	// 이제 토큰을 하나씩 읽으면서 디렉터리를 탐색합니다.
 
 	// 디렉터리 탐색
 	while ((token = strtok(NULL, "/")) != NULL) {
@@ -585,12 +552,46 @@ unsigned int findPath(char* path, int* sector) {
 					// 일치하는 파일 발견
 					firstCluster = entryFirstCluster;
 					currentSector = partitionStartSector + clusterBitSector + (firstCluster * getClusterSectorCount(mountedDisk, partitionNumber));
-					return currentSector
-
+					return currentSector;
+				}
+			}
 			// 요아니
 		}
 		// 이제	다음 토큰으로 이동
 	}
 	*sector = currentSector;
 	return 0; // 성공 시 0 반환
+}
+
+// Q: 해야할일은?
+// A: 1. findPath 함수 디버깅
+//    2. 파일 및 디렉토리 생성, 삭제, 수정 함수 정의
+//    3. 파일 및 디렉토리 관련 함수 디버깅
+//    4. 전체 파일시스템 테스트
+// Q: PathFind 함수 디버깅은 어떻게 하나요?
+// A: 1. 다양한 경로를 입력하여 함수 호출
+//    2. 반환된 섹터 번호가 올바른지 확인
+//    3. 디버깅 출력을 통해 내부 상태 확인
+// Q: 이제 위 PathFind 함수에서 쓰인 함수를 정의할 필요가 있나?
+// A: 응, getRootDirectoryCluster, getClusterSectorCount 함수 정의 필요
+// Q: 또 있어어어어???
+// A: 음... 일단은 그게 다인 것 같아
+unsigned int getRootDirectoryCluster(int partitionNumber, FILE* diskFile) {
+	// 파티션 시작 섹터 계산
+	unsigned long long partitionStartSector = 0;
+	cspt_OffsetTable* cspt = NULL;
+	ReadSector(diskFile, 0); // CSPT 헤더 읽기
+	if (strncmp(sectorBuffer, "CSPTBL", 6) != 0) {
+		return 0; // CSPT가 존재하지 않음
+	}
+	cspt = (cspt_OffsetTable*)sectorBuffer;// CSPT 구조체 포인터 설정
+	cspt_PartitionEntry* entry = (cspt_PartitionEntry*)&cspt->partitionEntries[partitionNumber * 16];// 파티션 엔트리 포인터 설정
+	partitionStartSector = entry->startSector;// 파티션 시작 섹터 설정
+	csfs_Header* csfs = NULL;
+	ReadSector(diskFile, partitionStartSector); // 파티션 헤더 읽기
+	if (strncmp(sectorBuffer, "CSFSYS", 6) != 0) {
+		return 0; // CSFS 파티션이 아님
+	}
+	csfs = (csfs_Header*)sectorBuffer;// CSFS 구조체 포인터 설정
+	return csfs->rootDirectoryCluster; // 루트 디렉터리 클러스터 번호 반환
 }
