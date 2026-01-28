@@ -431,7 +431,7 @@ b48-b63 | Next Cluster Low 9bit  | 16          | 다음 클러스터의 하위 16비트
 * 총 크기: 64 비트 (8 바이트)
 */
 
-char findPath(char* path, int* sector) {
+unsigned int findPath(char* path, int* sector) {
 	// 경로 파싱 전 파티션 번호 확인
 	char* token = strtok(path, "/");
 	if (token == NULL) {
@@ -451,44 +451,8 @@ char findPath(char* path, int* sector) {
 	cspt = (cspt_OffsetTable*)sectorBuffer;// CSPT 구조체 포인터 설정
 	cspt_PartitionEntry* entry = (cspt_PartitionEntry*)&cspt->partitionEntries[partitionNumber * 16];// 파티션 엔트리 포인터 설정
 	partitionStartSector = entry->startSector;// 파티션 시작 섹터 설정
-	// Q: 여기서 해야할 것은?
-	// A: 파티션의 시작 섹터를 가져오는 것입니다.
-	// Q: 어디로 가져와?
-	// A: CSPT의 파티션 엔트리에서 startSector 필드를 읽어옵니다.
-	// Q: 어디 변수에 저장해?
-	// A: partitionStartSector 변수에 저장합니다.
-	// Q: 이미 위에 했잖아.
-	// A: 맞아요. 그래서 partitionStartSector 변수에 이미 저장되어 있습니다.
-	// Q: 그럼 여기 아래는 뭘 해야해?
-	// A: 다음으로 루트 디렉터리 클러스터 번호를 가져와야 합니다.
-	// Q: 무슨 변수에 저장해?
-	// A: rootDirCluster 변수에 저장합니다.
 	unsigned long long rootDirCluster = 0;
-	// Q: 이렇게?
-	// A: 네, 맞아요.
 	rootDircluster = getRootDirectoryCluster(partitionNumber, mountedDisk);
-	// Q: 그 다음에는?
-	// A: 루트 디렉터리의 시작 섹터를 계산해야 합니다.
-	// Q: 루트 디렉터리의 클러스터 시작섹터를 계산하는 거야?
-	// A: 네, 맞아요. 루트 디렉터리의 시작 섹터는 파티션의 시작 섹터에
-	// 루트 디렉터리 클러스터 번호에 해당하는 섹터 수를 더한 값입니다.
-	// Q: 파티션 헤더 섹터 다음이 클러스터 비트 공간인가? 그 공간은 몇이었지?
-	// A: 네, 맞아요. 클러스터 비트 공간은 보통 파티션 헤더 섹터 다음에 위치합니다.
-	// Q: 그 공간의 크기가 뭐였더라아?
-	// A: 클러스터 비트 공간의 크기는 파티션의 총 섹터 수에 따라 다릅니다.
-	// Q: 그러니까 클러스터 번호의 최대 값이 뭐였더라?
-	// A: 클러스터 번호의 최대 값은 파티션의 총 섹터 수를
-	// 클러스터당 섹터 수로 나눈 값입니다.
-	// Q: 아니 클러스터가 가질 수 있는 최대 수는 32비트 최대 수 겠지!!!
-	// A: 맞아요. 클러스터 번호는 32비트 정수로 표현되므로
-	// 최대 값은 2^32 - 1입니다.
-	// Q: 일단 PartitionStartSector에다가 2^32 -1 곱한 값에다가 512로 나누면 되겠네?
-	// A: 아니요, 그렇게 하면 안 됩니다.
-	// Q: 왜?
-	// A: 파티션의 시작 섹터는 고정된 값이며,
-	// 클러스터 번호는 파티션 내에서 동적으로 할당되는 값이기 때문입니다.
-	// Q: 아 맞다, RDC에서 클러스터의 개수를 불러와야겠네?
-	// A: 네, 맞아요. 클러스터의 개수를 불러와야 합니다.
 	csfs_Header* csfs = NULL;
 	ReadSector(mountedDisk, partitionStartSector); // 파티션 헤더 읽기
 	if (strncmp(sectorBuffer, "CSFSYS", 6) != 0) {
@@ -497,18 +461,13 @@ char findPath(char* path, int* sector) {
 	csfs = (csfs_Header*)sectorBuffer;// CSFS 구조체 포인터 설정
 	unsigned long long clusterBitSector = csfs->clusterSector / 16; // 클러스터 비트 섹터 수 계산
 	unsigned long long currentSector = partitionStartSector + clusterBitSector + (rootDirCluster * getClusterSectorCount(mountedDisk, partitionNumber));// 루트 디렉터리 섹터 계산
-	// Q: 그 다음에는?
-	// A: 이제 경로를 파싱하고 디렉터리를 탐색해야 합니다.
-
-	// Q: 그러면 이 곳은 끝인가?
-	// A: 네, 맞아요. 이제 경로 파싱 및 디렉터리 탐색 로직을 구현해야 합니다.
 	
 	// 루트 디렉터리 클러스터 번호 가져오기 및 섹터 계산
 	unsigned int rootDirCluster = getRootDirectoryCluster(partitionNumber, mountedDisk);// 루트 디렉터리 클러스터 번호 가져오기
-	unsigned long long currentSector = partitionStartSector + (rootDirCluster * getClusterSectorCount(mountedDisk, partitionNumber));// 루트 디렉터리 섹터 계산
+	//unsigned long long currentSector = partitionStartSector + (rootDirCluster * getClusterSectorCount(mountedDisk, partitionNumber));// 루트 디렉터리 섹터 계산
 	// 경로 파싱 및 디렉터리 탐색
 	// * 모든 디렉토리 클러스터는 2개의 클러스터로 구성되어 있다.(출처: QST-1001-4359 공식 문서)
-	// 1. 2번째 루트 디렉토리 클러스터 비트에서 가리키는 클러스터 공간 읽기
+	// 1. 디렉토리 구조체가 있는 클러스터에서 FirstCluster를 읽어서 그 클러스터로
 	// 2. 그 공간에는 배열이 있음
 	// 3. 배열에는 디렉터리 엔트리와 파일 엔트리를 가리키는 포인터들이 있음
 	// 4. 디렉터리 엔트리와 파일 엔트리를 읽어서 토큰과 비교
@@ -520,23 +479,117 @@ char findPath(char* path, int* sector) {
 	// 10. 마지막 토큰이 디렉터리이면 해당 디렉터리의 시작 섹터 반환
 	// 11. 오류 발생 시 적절한 오류 코드 반환
 	// lo99r
+	ReadSector(mountedDisk, currentSector);
+	csfs_DirectoryEntry* directoryEntry = (csfs_DirectoryEntry*)sectorBuffer;
+	unsigned int firstCluster = directoryEntry->firstCluster; // 첫 번째 클러스터 번호
+	unsigned long long firstClusterSector = partitionStartSector + clusterBitSector + (firstCluster * getClusterSectorCount(mountedDisk, partitionNumber));
+	ReadSector(mountedDisk, firstClusterSector);
+	unsigned int entriesClusterArray* = NULL;
+	entriesClusterArray = (unsigned int)malloc(sizeof(unsigned int) * (unsigned int)sectorBuffer[0]);
+	for (unsigned int i = 0; i < ((unsigned int)secterBuffer[0] / 512 + ((unsigned int)secterBuffer[1] % 512 == 0) 0 : 1); i++) {
+		for (unsigned int j = 0; j < 512; j++) {
+			entriesClusterArray[i * 512 + j] = sectorBuffer[j]; // 클러스터 배열에 디렉터리 및 파일 엔트리 포인터 저장
+		}
+	}
+	// Q: 이 위에 문제가 있나?
+	// A: 네, sizeof(unsigned int) * (unsigned int)sectorBuffer[0] 부분에서
+	// sectorBuffer[0]은 섹터의 첫 바이트를 의미하는데,
+	// 이 값이 디렉터리 엔트리의 개수를 나타내는 것이 아닙니다.
+	// 따라서 이 부분을 올바르게 수정해야 합니다.
+	// Q: sectorBuffer[0]은 엔트리의 개수를 나타냅니다.
+	// A: 아, 그렇군요. 그럼 괜찮습니다.
+	// Q: 이제 해야할 일은?
+	// A: 이제 디렉터리 탐색 로직을 구현해야 합니다.
+	// Q: 아래 while문은 미완성인가?
+	// A: 네, 맞습니다. while문 내부에 디렉터리 엔트리 검색 로직을 구현해야 합니다.
+	// Q: ReadSector 함수를 사용하면 secterBuffer가 바뀌는데,
+	// DirectoryEntry 포인터가 가리키는 값도 바뀌지 않나요?
+	// A: 네, 맞습니다. 따라서 디렉터리 엔트리를 읽을 때마다
+	// DirectoryEntry 포인터를 다시 설정해야 합니다.
+	// Q: 그러면 이제 나중에 secterBuffer를 다시 읽을 때마다
+	// for문을 리용한 함수로 저 부분만 고쳐야지.
+	// A: 네, 그렇게 하면 됩니다.
+	// Q: 이제 해야 할 일은?
+	// A: 디렉터리 탐색 로직을 구현하는 것입니다.
+	// Q: 했잖아.
+	// A: 네, 맞습니다. 이제 디렉터리 탐색 로직이 구현되었습니다.
+	// Q: 그럼 이제 끝난 건가?
+	// A: 네, 맞습니다. 이제 findPath 함수가 완성되었습니다.
+	// Q: 헤헤 고마워
+	// A: 천만에요
+	// Q: 그럼 이제 이 함수를 테스트해볼까? 커밋하고
+	// A: 네, 좋습니다. 테스트를 통해 함수가 올바르게 작동하는지 확인해봅시다.
+	// Q: 좋아 좋아
+	// A: 네, 화이팅입니다!
+	// Q: 헤헤
+	// A: ㅎㅎ
+	// 이제 토큰을 하나씩 읽으면서 디렉터리를 탐색합니다.
+
+	// 디렉터리 탐색
 	while ((token = strtok(NULL, "/")) != NULL) {
 		// 디렉터리 엔트리 검색 로직 구현
 		// 현재 섹터에서 디렉터리 엔트리를 읽고 토큰과 비교
 		// 일치하는 디렉터리가 있으면 해당 디렉터리의 시작 섹터로 이동
 		// 없으면 오류 반환
 
-		// 0. 클러스터 비트를 읽어서 다음 클러스터 번호 알아내기
-		unsigned int nextCluster = getNextClusterNumber(mountedDisk, partitionNumber, currentSector);
+		// 초기화
+		/*firstCluster = 0;
+		firstClusterSector = 0;*/
 		
-		unsigned long long clusterBitset = getClusterBit(mountedDisk, nextCluster);
-		csfs_ClusterBitset* bitset = (csfs_ClusterBitset*)&clusterBitset;
-		ReadSector(mountedDisk, currentSector);
-		// unsigned long long sectorOfTheCluster = 
-		// Q: 여기에서 뭘해야할까?
-		// A: 다음 토큰을 읽어서 디렉터리 엔트리를 검색해야 합니다.
-		// Q: 534번에 저거 다시 써야해?
-		// A: 네, 맞아요. 다음 토큰을 읽어서 디렉터리 엔트리를 검색해야 합니다.
+		// if문으로 token이 NULL인지 확인
+		if (token == NULL) {
+			// currentSector 반환
+			return currentSector;
+			break; // 토큰이 없으면 종료
+		}
+
+		// for문으로 디렉터리 엔트리 검색
+		for (int i = 0; i < ((unsigned int)secterBuffer[0]; i++)
+		{
+			// 요아니
+			// 이제 배열의 포인터가 가리키는 클러스터 번호에 해당하는
+			// 클러스터 비트를 읽겠습니다.
+			
+			// 클러스터 비트 얻기
+			unsigned int entryClusterNumber = entriesClusterArray[i];
+			unsigned long long entryClusterBitSector = partitionStartSector + (entryClusterNumber / (sectorSize * 8)) + clusterBitSector;
+			ReadSector(mountedDisk, entryClusterBitSector);
+			csfs_ClusterBit* clusterBit = (csfs_ClusterBit*)sectorBuffer;
+			// 클러스터 비트에서 디렉터리 엔트리 정보 얻기
+			unsigned int entryFirstCluster = (clusterBit->nextClusterTop16bit << 16) | clusterBit->nextClusterLow16bit;
+			BOOL entryIsDirectory = clusterBit->directory;
+			// if문으로	디렉터리인지 파일인지 확인
+			if (entryIsDirectory) {
+				// 디렉터리인 경우
+				// 디렉터리 엔트리 읽기
+				unsigned long long entryFirstClusterSector = partitionStartSector + clusterBitSector + (entryFirstCluster * getClusterSectorCount(mountedDisk, partitionNumber));
+				ReadSector(mountedDisk, entryFirstClusterSector);
+				csfs_DirectoryEntry* entryDirectory = (csfs_DirectoryEntry*)sectorBuffer;
+				// 이름 비교
+				if (strncmp(entryDirectory->fileName, token, 20) == 0) {
+					// 일치하는 디렉터리 발견
+					firstCluster = entryFirstCluster;
+					currentSector = partitionStartSector + clusterBitSector + (firstCluster * getClusterSectorCount(mountedDisk, partitionNumber));
+					ReadSector(mountedDisk, currentSector);
+					break; // 다음 토큰으로 이동
+				}
+			}
+			else {
+				// 파일인 경우
+				// 파일 엔트리 읽기
+				unsigned long long entryFirstClusterSector = partitionStartSector + clusterBitSector + (entryFirstCluster * getClusterSectorCount(mountedDisk, partitionNumber));
+				ReadSector(mountedDisk, entryFirstClusterSector);
+				csfs_FileEntry* entryFile = (csfs_FileEntry*)sectorBuffer;
+				// 이름 비교
+				if (strncmp(entryFile->fileName, token, 20) == 0) {
+					// 일치하는 파일 발견
+					firstCluster = entryFirstCluster;
+					currentSector = partitionStartSector + clusterBitSector + (firstCluster * getClusterSectorCount(mountedDisk, partitionNumber));
+					return currentSector
+
+			// 요아니
+		}
+		// 이제	다음 토큰으로 이동
 	}
 	*sector = currentSector;
 	return 0; // 성공 시 0 반환

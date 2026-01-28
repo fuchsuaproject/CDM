@@ -208,7 +208,7 @@ void listFiles(FILE* diskFile);// 파일 목록 나열
 void defragmentDisk(FILE* diskFile);// 디스크 조각 모음
 char mountDisk(FILE* diskFile, char* diskImagePath);// 디스크 이미지 마운트
 void createDirectory(char* dirName);// 디렉토리 생성
-void findPath(char* path, int* sector);// 경로 찾기
+unsigned int findPath(char* path, int* sector);// 경로 찾기
 // 경로 예시: "1/dir/subdir/file.txt"
 
 char testCreateFile();// 테스트용 파일 생성 함수(버려써...)
