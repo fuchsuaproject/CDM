@@ -449,9 +449,60 @@ char findPath(char* path, int* sector) {
 		return 3; // CSPT가 존재하지 않음
 	}
 	cspt = (cspt_OffsetTable*)sectorBuffer;// CSPT 구조체 포인터 설정
-	cspt_PartitionEntry* entry = (cspt_PartitionEntry*)&cspt->partitionEntries[partitionNumber * 16];
-	partitionStartSector = entry->startSector;
+	cspt_PartitionEntry* entry = (cspt_PartitionEntry*)&cspt->partitionEntries[partitionNumber * 16];// 파티션 엔트리 포인터 설정
+	partitionStartSector = entry->startSector;// 파티션 시작 섹터 설정
+	// Q: 여기서 해야할 것은?
+	// A: 파티션의 시작 섹터를 가져오는 것입니다.
+	// Q: 어디로 가져와?
+	// A: CSPT의 파티션 엔트리에서 startSector 필드를 읽어옵니다.
+	// Q: 어디 변수에 저장해?
+	// A: partitionStartSector 변수에 저장합니다.
+	// Q: 이미 위에 했잖아.
+	// A: 맞아요. 그래서 partitionStartSector 변수에 이미 저장되어 있습니다.
+	// Q: 그럼 여기 아래는 뭘 해야해?
+	// A: 다음으로 루트 디렉터리 클러스터 번호를 가져와야 합니다.
+	// Q: 무슨 변수에 저장해?
+	// A: rootDirCluster 변수에 저장합니다.
+	unsigned long long rootDirCluster = 0;
+	// Q: 이렇게?
+	// A: 네, 맞아요.
+	rootDircluster = getRootDirectoryCluster(partitionNumber, mountedDisk);
+	// Q: 그 다음에는?
+	// A: 루트 디렉터리의 시작 섹터를 계산해야 합니다.
+	// Q: 루트 디렉터리의 클러스터 시작섹터를 계산하는 거야?
+	// A: 네, 맞아요. 루트 디렉터리의 시작 섹터는 파티션의 시작 섹터에
+	// 루트 디렉터리 클러스터 번호에 해당하는 섹터 수를 더한 값입니다.
+	// Q: 파티션 헤더 섹터 다음이 클러스터 비트 공간인가? 그 공간은 몇이었지?
+	// A: 네, 맞아요. 클러스터 비트 공간은 보통 파티션 헤더 섹터 다음에 위치합니다.
+	// Q: 그 공간의 크기가 뭐였더라아?
+	// A: 클러스터 비트 공간의 크기는 파티션의 총 섹터 수에 따라 다릅니다.
+	// Q: 그러니까 클러스터 번호의 최대 값이 뭐였더라?
+	// A: 클러스터 번호의 최대 값은 파티션의 총 섹터 수를
+	// 클러스터당 섹터 수로 나눈 값입니다.
+	// Q: 아니 클러스터가 가질 수 있는 최대 수는 32비트 최대 수 겠지!!!
+	// A: 맞아요. 클러스터 번호는 32비트 정수로 표현되므로
+	// 최대 값은 2^32 - 1입니다.
+	// Q: 일단 PartitionStartSector에다가 2^32 -1 곱한 값에다가 512로 나누면 되겠네?
+	// A: 아니요, 그렇게 하면 안 됩니다.
+	// Q: 왜?
+	// A: 파티션의 시작 섹터는 고정된 값이며,
+	// 클러스터 번호는 파티션 내에서 동적으로 할당되는 값이기 때문입니다.
+	// Q: 아 맞다, RDC에서 클러스터의 개수를 불러와야겠네?
+	// A: 네, 맞아요. 클러스터의 개수를 불러와야 합니다.
+	csfs_Header* csfs = NULL;
+	ReadSector(mountedDisk, partitionStartSector); // 파티션 헤더 읽기
+	if (strncmp(sectorBuffer, "CSFSYS", 6) != 0) {
+		return 3; // CSFS 파티션이 아님
+	}
+	csfs = (csfs_Header*)sectorBuffer;// CSFS 구조체 포인터 설정
+	unsigned long long clusterBitSector = csfs->clusterSector / 16; // 클러스터 비트 섹터 수 계산
+	unsigned long long currentSector = partitionStartSector + clusterBitSector + (rootDirCluster * getClusterSectorCount(mountedDisk, partitionNumber));// 루트 디렉터리 섹터 계산
+	// Q: 그 다음에는?
+	// A: 이제 경로를 파싱하고 디렉터리를 탐색해야 합니다.
 
+	// Q: 그러면 이 곳은 끝인가?
+	// A: 네, 맞아요. 이제 경로 파싱 및 디렉터리 탐색 로직을 구현해야 합니다.
+	
 	// 루트 디렉터리 클러스터 번호 가져오기 및 섹터 계산
 	unsigned int rootDirCluster = getRootDirectoryCluster(partitionNumber, mountedDisk);// 루트 디렉터리 클러스터 번호 가져오기
 	unsigned long long currentSector = partitionStartSector + (rootDirCluster * getClusterSectorCount(mountedDisk, partitionNumber));// 루트 디렉터리 섹터 계산
@@ -476,12 +527,16 @@ char findPath(char* path, int* sector) {
 		// 없으면 오류 반환
 
 		// 0. 클러스터 비트를 읽어서 다음 클러스터 번호 알아내기
-		unsigned int nextCluster = 
-		if (nextCluster == 0xFFFFFFFF) {
-			return 4; // 오류 발생
-		}
-		currentSector = partitionStartSector + (nextCluster * getClusterSectorCount(mountedDisk, partitionNumber));
-		//todo: 디렉터리 엔트리 읽기 및 토큰과 비교 로직 구현
+		unsigned int nextCluster = getNextClusterNumber(mountedDisk, partitionNumber, currentSector);
+		
+		unsigned long long clusterBitset = getClusterBit(mountedDisk, nextCluster);
+		csfs_ClusterBitset* bitset = (csfs_ClusterBitset*)&clusterBitset;
+		ReadSector(mountedDisk, currentSector);
+		// unsigned long long sectorOfTheCluster = 
+		// Q: 여기에서 뭘해야할까?
+		// A: 다음 토큰을 읽어서 디렉터리 엔트리를 검색해야 합니다.
+		// Q: 534번에 저거 다시 써야해?
+		// A: 네, 맞아요. 다음 토큰을 읽어서 디렉터리 엔트리를 검색해야 합니다.
 	}
 	*sector = currentSector;
 	return 0; // 성공 시 0 반환

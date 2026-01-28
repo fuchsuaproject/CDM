@@ -230,6 +230,8 @@ unsigned short getClusterSectorCount(FILE* diskFile, int partitionNumber);
 unsigned long long getTotalSectors(FILE* diskFile, int partitionNumber);
 unsigned long long getFreeSectors(FILE* diskFile);
 unsigned int getRootDirectoryCluster(int partitionNumber, FILE* diskFile);
+unsigned int getNextClusterNumber(FILE* diskFile, int partitionNumber, unsigned int currentCluster);
+unsigned long long getClusterBit(FILE* diskFile, int partitionNumber, unsigned int clusterNumber);
 
 // 섹터 크기 임시
 unsigned short sectorSizeTemp(unsigned short sectorSize, char* buffer);
@@ -277,12 +279,35 @@ typedef struct {
 
 // CSFS Claster Bitset
 typedef struct {
-	unsigned long long nextCluster : 32; // 다음 클러스터 (32비트)
-	unsigned long long endOfFile : 1;    // 파일의 끝을 나타내는 비트
-	unsigned long long directory : 1;     // 디렉토리 여부를 나타내는 비트
-	unsigned long long used : 1;          // 클러스터가 사용 중인지 여부
-	unsigned long long reserved : 29;     // 예약 비트
+	unsigned long long cracked : 1;            // b0: 클러스터가 손상되었는지 여부
+	unsigned long long reserved1 : 3;          // b1-b3: 예약 비트
+	unsigned long long nextClusterTop16bit : 16; // b4-b19: 다음 클러스터의 상위 16비트
+	unsigned long long endOfFile : 1;          // b20: 파일의 끝을 나타내는 비트
+	unsigned long long directory : 1;          // b21: 디렉토리 여부를 나타내는 비트
+	unsigned long long used : 1;               // b22: 클러스터가 사용 중인지 여부
+	unsigned long long reserved2 : 25;         // b23-b47: 예약 비트
+	unsigned long long nextClusterLow16bit : 16; // b48-b63: 다음 클러스터의 하위 16비트
 }csfs_ClusterBitset __attribute__((packed));
+// Q: 이거 왜 위에 표랑 달라?
+// A: 위의 표는 비트 단위로 설명한 것이고, 여기서는 구조체로 표현한 것입니다.
+// Q: 아니 느그가 한 번 비교해봐라
+/*
+CSFS Claster Bitset
+
+Bitset  | Name			         | Size (bits) | Description
+--------|------------------------|-------------|-----------------------------
+b0      | Cracked                | 1           | 클러스터가 손상되었는지 여부
+b1-b3   | Reserved               | 3           | 예약 비트
+b4-b19  | Next Cluster Top 16bit | 16          | 다음 클러스터의 상위 16비트
+b20     | End of File (EOF)      | 1           | 파일의 끝을 나타내는 비트
+b21     | Directory              | 1           | 디렉토리 여부를 나타내는 비트
+b22     | Used                   | 1           | 클러스터가 사용 중인지 여부
+b23-b47 | Reserved               | 25          | 예약 비트
+b48-b63 | Next Cluster Low 9bit  | 16          | 다음 클러스터의 하위 16비트
+* 총 크기: 64 비트 (8 바이트)
+*/
+// A: 아 맞네
+// Q: 그럼 수정해라
 
 // CSFS Directory Entry Structure
 typedef struct {
