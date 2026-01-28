@@ -595,3 +595,27 @@ unsigned int getRootDirectoryCluster(int partitionNumber, FILE* diskFile) {
 	csfs = (csfs_Header*)sectorBuffer;// CSFS 구조체 포인터 설정
 	return csfs->rootDirectoryCluster; // 루트 디렉터리 클러스터 번호 반환
 }
+unsigned int getNextClusterNumber(FILE* diskFile, int partitionNumber, unsigned int currentCluster) {
+	// 파티션 시작 섹터 계산
+	unsigned long long partitionStartSector = 0;
+	cspt_OffsetTable* cspt = NULL;
+	ReadSector(diskFile, 0); // CSPT 헤더 읽기
+	if (strncmp(sectorBuffer, "CSPTBL", 6) != 0) {
+		return 0; // CSPT가 존재하지 않음
+	}
+	cspt = (cspt_OffsetTable*)sectorBuffer;// CSPT 구조체 포인터 설정
+	cspt_PartitionEntry* entry = (cspt_PartitionEntry*)&cspt->partitionEntries[partitionNumber * 16];// 파티션 엔트리 포인터 설정
+	partitionStartSector = entry->startSector;// 파티션 시작 섹터 설정
+	csfs_Header* csfs = NULL;
+	ReadSector(diskFile, partitionStartSector); // 파티션 헤더 읽기
+	if (strncmp(sectorBuffer, "CSFSYS", 6) != 0) {
+		return 0; // CSFS 파티션이 아님
+	}
+	csfs = (csfs_Header*)sectorBuffer;// CSFS 구조체 포인터 설정
+	unsigned long long clusterBitSector = csfs->clusterSector / 16; // 클러스터 비트 섹터 수 계산
+	unsigned long long clusterBitOffsetSector = partitionStartSector + clusterBitSector + (currentCluster / (sectorSize * 8));
+	ReadSector(diskFile, clusterBitOffsetSector);
+	csfs_ClusterBit* clusterBit = (csfs_ClusterBit*)sectorBuffer;
+	unsigned int nextClusterNumber = (clusterBit->nextClusterTop16bit << 16) | clusterBit->nextClusterLow16bit;
+	return nextClusterNumber;
+}
