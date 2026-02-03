@@ -446,7 +446,7 @@ unsigned int findPath(char* path, int* sector) {
 	cspt_OffsetTable* cspt = NULL;
 	ReadSector(mountedDisk, 0); // CSPT 헤더 읽기
 	if (strncmp(sectorBuffer, "CSPTBL", 6) != 0) {
-		return 3; // CSPT가 존재하지 않음
+		return 4; // CSPT가 존재하지 않음
 	}
 	cspt = (cspt_OffsetTable*)sectorBuffer;// CSPT 구조체 포인터 설정
 	cspt_PartitionEntry* entry = (cspt_PartitionEntry*)&cspt->partitionEntries[partitionNumber * 16];// 파티션 엔트리 포인터 설정
@@ -456,7 +456,7 @@ unsigned int findPath(char* path, int* sector) {
 	csfs_Header* csfs = NULL;
 	ReadSector(mountedDisk, partitionStartSector); // 파티션 헤더 읽기
 	if (strncmp(sectorBuffer, "CSFSYS", 6) != 0) {
-		return 3; // CSFS 파티션이 아님
+		return 5; // CSFS 파티션이 아님
 	}
 	csfs = (csfs_Header*)sectorBuffer;// CSFS 구조체 포인터 설정
 	unsigned long long clusterBitSector = csfs->clusterSector / 16; // 클러스터 비트 섹터 수 계산
@@ -504,11 +504,6 @@ unsigned int findPath(char* path, int* sector) {
 		firstClusterSector = 0;*/
 		
 		// if문으로 token이 NULL인지 확인
-		if (token == NULL) {
-			// currentSector 반환
-			return currentSector;
-			break; // 토큰이 없으면 종료
-		}
 
 		// for문으로 디렉터리 엔트리 검색
 		for (int i = 0; i < ((unsigned int)secterBuffer[0]; i++)
@@ -552,15 +547,20 @@ unsigned int findPath(char* path, int* sector) {
 					// 일치하는 파일 발견
 					firstCluster = entryFirstCluster;
 					currentSector = partitionStartSector + clusterBitSector + (firstCluster * getClusterSectorCount(mountedDisk, partitionNumber));
-					return currentSector;
+					*sector = currentSector;
+					return 0;
 				}
 			}
 			// 요아니
+			if (i == ((unsigned int)secterBuffer[0] - 1)) {
+				// 마지막 엔트리까지 검색했으나 일치하는 디렉터리 또는 파일이 없음
+				free(entriesClusterArray);
+				return 6; // 오류 코드 반환
 		}
 		// 이제	다음 토큰으로 이동
 	}
 	*sector = currentSector;
-	return 0; // 성공 시 0 반환
+	return 7; // 여기까지 온 것은 중간에 일치하지 않는 디렉터리가 있었던 것
 }
 
 // Q: 해야할일은?
@@ -618,4 +618,40 @@ unsigned int getNextClusterNumber(FILE* diskFile, int partitionNumber, unsigned 
 	csfs_ClusterBit* clusterBit = (csfs_ClusterBit*)sectorBuffer;
 	unsigned int nextClusterNumber = (clusterBit->nextClusterTop16bit << 16) | clusterBit->nextClusterLow16bit;
 	return nextClusterNumber;
+}
+int createFile(FILE* diskFile, char* filename) {
+	// filename이 경로일 것임을 가정한다.
+	int sector = 0;
+	// filename에서 filename 부분을 제거한다.
+	int lenOfFileName = strlen(filename);
+	char filePath = NULL;
+	for (int i = lenOfFileName; 1; i--) {
+		if (filename[i] = '/') {
+			filePath = (char*)malloc(sizeof(char) * lenOfFileName);
+			strcpy(filePath, filename);
+			filePath[i] = '\0';
+		}
+	}
+	unsigned int didItFound = findPath(filename, &sector);
+	// Q: sector는 왜 넣은거야? 0으로 넣으면 되잖아.
+	// A: findPath 함수에서 경로를 따라가다가 마지막에 도달한 섹터 번호를
+	// 반환하기 위해서야.
+	// Q: 그럼 이미 fileSector가 반환되잖아.
+	// A: 맞아, 하지만 findPath 함수가 아직 완성되지 않았기 때문에
+	// sector 인자를 통해서도 섹터 번호를 얻으려고 하는 거야.
+	// Q: 완성 되었다매 그래서 커밋했잖아.
+	// A: 음... 아직 완성되지 않았어. 디렉터리 탐색 부분이 미완성이야.
+	// Q: 이제 됨?
+	// A: 응, 이제 됨.
+	// Q: 그럼 저 fileSector 변수는 필요없지 않아?
+	// A: 맞아, 필요없어. 지워도 돼.
+	if (didItFound != 7) {
+		return didItFound; // 오류 코드 반환
+	}
+	// 저 경로가 존재하는 경로이라믄 다음 클러스터로 간 다음에
+	// 배열에서 클러스터 포인터를 추가한 다음 파일 포인터를 작성
+	// findPath는 엔트리 섹터라고 생각하기로
+	ReadSector(diskFile, sector);
+	csfs_DirectoryEntry* entry = (csfs_DirectoryEntry*)sectorBuffer;
+	ReadSector(diskFile, entry->firstCluster)
 }
