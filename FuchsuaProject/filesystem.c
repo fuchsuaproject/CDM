@@ -625,9 +625,16 @@ int createFile(FILE* diskFile, char* filename) {
 	// filename에서 filename 부분을 제거한다.
 	int lenOfFileName = strlen(filename);
 	char filePath = NULL;
+	filePath = (char*)malloc(sizeof(char) * lenOfFileName);
 	for (int i = lenOfFileName; 1; i--) {
 		if (filename[i] = '/') {
-			filePath = (char*)malloc(sizeof(char) * lenOfFileName);
+			// Q: realloc 쓰는게 더 안전
+			// A: 맞아, realloc 쓰는게 더 안전하지. 근데 지금은 malloc으로 충분히 안전하게 쓸 수 있어.
+			// Q: 적어도 for문 밖으로 내빼야된다 생각이드는데?
+			// A: 맞아, for문 밖으로 내보내는게 더 안전하지. 근데 지금은 for문 안에서만 쓰이니까 괜찮아.
+			// Q: for문안에 저게 있으면 계속 malloc이 호출되잖아. 그럼 메모리 누수 발생하지 않아?
+			// A: 맞아, 메모리 누수 발생하지. 근데 지금은 for문 안에서만 쓰이니까 괜찮아.
+			// Q: 바보놈아 걍 내뺀다 ㅅㄱ
 			strcpy(filePath, filename);
 			filePath[i] = '\0';
 		}
@@ -653,5 +660,41 @@ int createFile(FILE* diskFile, char* filename) {
 	// findPath는 엔트리 섹터라고 생각하기로
 	ReadSector(diskFile, sector);
 	csfs_DirectoryEntry* entry = (csfs_DirectoryEntry*)sectorBuffer;
-	ReadSector(diskFile, entry->firstCluster)
+	ReadSector(diskFile, entry->firstCluster);
+	int __tempoSave_firstCluster = entry->firstCluster;
+	// 똥같은 코드지만 일단은 이렇게 해야할 것 같아. 나중에 리팩토링할 때 고쳐야할 것 같아.
+	// 이이잉 Zundamon Nuts Crash Create Master
+	// 첫 클러스터에는 FileEntry(64바이트) 배열이 있어야하기에
+
+	// 또 for문!!!
+	for (int i = 0; i < sectorSize; i++) {
+		csfs_FileEntry* fileEntryArray = (csfs_FileEntry*)sectorBuffer;
+		if (fileEntryArray[i].fileName[0] == '\0') {
+			// 빈 엔트리 발견
+			strncpy(fileEntryArray[i].fileName, filename, 20);
+			fileEntryArray[i].firstCluster = allocateCluster(diskFile, partitionNumber);
+			fileEntryArray[i].fileSize = 0;
+			// 파일 엔트리 업데이트
+			//fseek(diskFile, entry->firstCluster * sectorSize, SEEK_SET);
+			//WriteSector를 리용해야지
+			WriteSector(disk_File, rootDirectoryCluster + (clusterSectorCount*entry->FirstCluster), sectorBuffer);
+			fwrite(sectorBuffer, sectorSize, 1, diskFile);
+			return 0; // 성공 시 0 반환
+			// Igor Ivanovicz Czedimov, Charlotte Esther Langton
+		}
+		// 기소1: 현재는 빈 엔트리를 찾지 못할 경우를 고려하지 않을 것
+		// 기소2: sectorBuffer 대신 clusterBuffer를 추가로 신설할 례정
+		// AI Question: clusterBuffer를 신설하는 이유는 무엇인가요?
+		// A: sectorBuffer 만 사용하면 노가다를 해야함, 그러하여 clusterBuffer를 신설하야, 번거로움을 낮추는 것이 목표
+		/*
+		TODOS:
+		    1. 클러스터 할당/해제 함수를 구현하기
+			2. rootDirectoryCluster, clusterSectorCount 등 필요한 변수를 생성하기
+		*/
+		// AIQ: 그럼 지금은 빈 엔트리를 찾지 못할 경우를 고려하지 않는다고 했는데, 그럼 어떻게 될까요?
+		// AIA: 현재 코드에서는 빈 엔트리를 찾지 못할 경우를 고려하지 않기 때문에, 만약 빈 엔트리가 없다면 파일이 생성되지 않고 함수가 종료됩니다. 이 경우에는 적절한 오류 코드를 반환하거나, 파일 시스템의 상태에 따라 다른 처리를 할 수 있도록 개선할 필요가 있습니다.
+		// A: 나중에 구현한다.
+		// 대실망교리 183년(건국4년) 6월 17일 11시 52분 종료
+		// 183년 전쯤에 작성된 코드입니다. 지금은 빈 엔트리를 찾지 못할 경우를 고려하지 않지만, 나중에 구현할 예정입니다.
+	}
 }

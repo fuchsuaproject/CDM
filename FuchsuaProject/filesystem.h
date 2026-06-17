@@ -310,13 +310,18 @@ b48-b63 | Next Cluster Low 9bit  | 16          | 다음 클러스터의 하위 1
 // Q: 그럼 수정해라
 
 // CSFS Directory Entry Structure
-typedef struct {
-	char directoryName[32];       // 디렉토리 이름 (NULL 종료 문자열)
-	unsigned long long creationTime; // 디렉토리 생성 시간 (타임스탬프)
-	unsigned long long modificationTime; // 디렉토리 수정 시간 (타임스탬프)
-	unsigned int firstCluster;    // 디렉토리의 첫 번째 클러스터
-	char reserved[4];             // 예약 영역
-}csfs_DirectoryEntry __attribute__((packed));
+//typedef struct {
+//	char directoryName[32];       // 디렉토리 이름 (NULL 종료 문자열)
+//	unsigned long long creationTime; // 디렉토리 생성 시간 (타임스탬프)
+//	unsigned long long modificationTime; // 디렉토리 수정 시간 (타임스탬프)
+//	unsigned int firstCluster;    // 디렉토리의 첫 번째 클러스터
+//	char reserved[4];             // 예약 영역
+//}csfs_DirectoryEntry __attribute__((packed));
+
+// csfs_DirectoryEntry와 DirectoryEntry와 FileEntry는 모두 csfs_FileEntry로 간주
+typedef csfs_FileEntry csfs_DirectoryEntry;
+typedef csfs_FileEntry DirectoryEntry;
+typedef csfs_FileEntry FileEntry;
 
 // CSFS File Entry Structure
 typedef struct {
