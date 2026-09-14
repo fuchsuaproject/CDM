@@ -136,17 +136,25 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="binary.h" />
+    <ClInclude Include="binary.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="filesystem.h" />
     <ClInclude Include="global.h" />
-    <ClInclude Include="q.h" />
+    <ClInclude Include="q.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="v.h" />
     <ClInclude Include="version.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="binary.c" />
+    <ClCompile Include="binary.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="directory.c" />
-    <ClCompile Include="filesystem.c" />
+    <ClCompile Include="filesystem.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="main.c" />
     <ClCompile Include="setup.c" />
     <ClCompile Include="shell.c" />

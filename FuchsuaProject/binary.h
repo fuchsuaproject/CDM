@@ -79,7 +79,7 @@
 #include <mmsystem.h>                //음악
 #include <Digitalv.h>                //음악
 
-#include"q.h"
+//#include"q.h"
 #include"v.h"
 #include<malloc.h>
 
