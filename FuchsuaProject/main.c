@@ -54,7 +54,7 @@ struct cdm_Link {
 	char* optionString;
 };
 
-static inline char** cdm_OptionToken(char* input) {
+char** cdm_OptionToken(char* input) {
 	char* token = strtok(input, " ");
 	int tokenLen = 0;
 	char** argp = NULL;
@@ -69,6 +69,13 @@ static inline char** cdm_OptionToken(char* input) {
 		count++;
 	}
 	return argp;
+}
+
+void cdm_Free2DArray(char** array, int size) {
+	for (int i = 0; i < size; i++) {
+		free(array[i]);
+	}
+	free(array);
 }
 
 struct cdm_Link cdm_LinkList[] = { {cdm_ShellMainCode, "shell\n"},  {NULL, NULL}};
