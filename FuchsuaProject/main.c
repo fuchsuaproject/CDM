@@ -56,20 +56,22 @@ struct cdm_Link {
 
 static inline char** cdm_OptionToken(char* input) {
 	char* token = strtok(input, " ");
-	int tokenLen = strlen(token);
-	char** argp = (char*)malloc(1);
+	int tokenLen = 0;
+	char** argp = NULL;
 	int count = 0;
 	while (token != NULL) {
 		//아래 코드를 realloc 으로 할 예정
-		realloc(*(argp + count), tokenLen + 1);
-		strcpy(*(argp + count), token);
+		tokenLen = strlen(token);
+		argp = realloc(argp, sizeof(char*) * (count + 1));
+		argp[count] = malloc(tokenLen + 1);
+		strcpy(argp[count], token);
 		token = strtok(NULL, " ");
 		count++;
 	}
 	return argp;
 }
 
-struct cdm_Link cdm_LinkList[] = { {NULL, NULL} };
+struct cdm_Link cdm_LinkList[] = { {cdm_ShellMainCode, "shell\n"},  {NULL, NULL}};
 static inline void cdm_Arg1(char** argp);
 static inline void cdm_Arg0() {
 	char** argp = NULL;
@@ -90,7 +92,8 @@ static inline void cdm_Arg1(char** argp) {
 	int found = 0;
 	for (int i = 0; cdm_LinkList[i].optionString != NULL; i++) {
 		if (strcmp(argp[1], cdm_LinkList[i].optionString) == 0) {
-			void (*func)(char* argp) = cdm_LinkList[i].functionPointer;
+			void (*func)(char** argp) = cdm_LinkList[i].functionPointer;
+			printf("%s %s\n", argp[1], cdm_LinkList[i].optionString);
 			func(argp);
 			found++;
 			break;
