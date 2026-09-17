@@ -54,12 +54,41 @@ struct cdm_Link {
 	char* optionString;
 };
 
+void cdm_TokenTest(char** argp) {
+	for (int i = 0; argp[i] != NULL; i++) {
+		printf("argp[%d]: %s\n", i, argp[i]);
+	}
+}
+
 char** cdm_OptionToken(char* input) {
 	char* token = strtok(input, " ");
 	int tokenLen = 0;
 	char** argp = NULL;
 	int count = 0;
+	int isDDaomPyo = 0;
 	while (token != NULL) {
+		if (token[0] == '\"') {
+			isDDaomPyo = 1;
+			token++;
+			//조치
+			
+		}
+		if (isDDaomPyo == 1) {
+			char* eee = NULL;
+			////cdm_eee(token, eee);
+			char* l0 = strchr(token, '\0');
+			l0[0] = ' ';
+			char* newToken = strtok(NULL, "\"");
+			tokenLen = strlen(token);
+			argp = realloc(argp, sizeof(char*) * (count + 1));
+			argp[count] = malloc(tokenLen + 1);
+			strcpy(argp[count], token);
+			token = newToken;
+			token = strtok(NULL, " ");
+			count++;
+			isDDaomPyo = 0;
+			continue;
+		}
 		//아래 코드를 realloc 으로 할 예정
 		tokenLen = strlen(token);
 		argp = realloc(argp, sizeof(char*) * (count + 1));
@@ -68,6 +97,8 @@ char** cdm_OptionToken(char* input) {
 		token = strtok(NULL, " ");
 		count++;
 	}
+	argp = realloc(argp, sizeof(char*) * (count + 1));
+	argp[count] = NULL;
 	return argp;
 }
 
@@ -100,7 +131,7 @@ static inline void cdm_Arg1(char** argp) {
 	for (int i = 0; cdm_LinkList[i].optionString != NULL; i++) {
 		if (strcmp(argp[1], cdm_LinkList[i].optionString) == 0) {
 			void (*func)(char** argp) = cdm_LinkList[i].functionPointer;
-			printf("%s %s\n", argp[1], cdm_LinkList[i].optionString);
+			// printf("%s %s\n", argp[1], cdm_LinkList[i].optionString);
 			func(argp);
 			found++;
 			break;

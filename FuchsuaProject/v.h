@@ -65,8 +65,9 @@ int cdm_FindStarInStringLast(char string[260]);
 //inr
 int cdm_CdZeomDugae(char string[260]);
 int cdm_baseDir_Func();
-char** cdm_OptionToken(char* input)
+char** cdm_OptionToken(char* input);
 void cdm_Free2DArray(char** array, int size);
+void cdm_TokenTest(char** argp);
 int find_enter(char _strings[2048], int _count);
 inline int yoany();
 unsigned _stdcall Keyupdate_loop(void* arg);
