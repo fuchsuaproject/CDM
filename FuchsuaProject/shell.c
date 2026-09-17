@@ -100,6 +100,15 @@ char** cdm_FindHwanGyeongByeonSu(char* input) {
 	return a;
 }
 
+void cdm_bunLie(char* input) {
+	// 여기에서는 input로 입력된 문자열에서 $를 찾아서 환경변수로 치환합니다.
+	char* result = malloc(strlen(input) + 1);
+	int count = 0;
+	for (int i = 0; input[i] != '\0'; i++) {
+		// TODOL:O waiterj
+	}
+}
+
 void cdm_Cad(char** argp) {
 	if (argp[1] == NULL) {
 		printf("Usage: cad <directory>\n");
@@ -161,6 +170,21 @@ void cdm_Help(char** argp) {
 	printf("  help            - Show this help message\n");
 }
 
+void cdm_Echo(char** argp) {
+	if (argp[1] == NULL) {
+		printf("\n");
+		return;
+	}
+	for (int i = 1; argp[i] != NULL; i++) {
+		printf("%s ", argp[i]);
+	}
+	printf("\n");
+}
+
+void cdm_Set(char** argp) {
+	//
+}
+
 struct shellp shellpList[] = {
 	{cdm_Cad, "cad"}, // TODO: Implement the 'cd' command functionality
 	{cdm_Exit, "ext"},
@@ -168,6 +192,8 @@ struct shellp shellpList[] = {
 	{cdm_SeeCurrentDirectory, "dir"},
 	{cdm_Cls, "cls"},
 	{cdm_Help, "help"},
+	{cdm_Echo, "echo"},
+	{cdm_Set, "set"},
 	{NULL, NULL}
 };
 
@@ -226,8 +252,11 @@ int cdm_ShellMainCode(char** argp) {
 		/*cdm_FindHwanGyeongByeonSu(NULL);*/
 		HwanGyeongByeonSu = cdm_FindHwanGyeongByeonSu(NULL);
 		char commandline[260] = { 0, };
-		strcpy(commandline, input);
-		char** argp = cdm_OptionToken(input);
+		char* ginput = NULL;
+		strcpy(ginput, input);
+		ginput = cdm_Bunlie();
+		strcpy(commandline, ginput);
+		char** argp = cdm_OptionToken(ginput);
 		//cdm_TokenTest(argp);
 		int ooo = cdm_BiGyo(argp, commandline);
 		int ioa = cdm_ioa(argp);
