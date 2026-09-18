@@ -8,6 +8,7 @@ char cdm_Directory[2048][260] = { 0, };
 char cdm_QwdStar[260] = { 0, };
 char Bffr[260] = { 0, };
 char __260[260] = { 0, };
+char* cdm_HGBSCdm = NULL;
 
 wchar_t cdm_Ls[260] = L"";
 
@@ -89,19 +90,24 @@ char** cdm_TokeningHGBS(char* input) {
 }
 
 char** cdm_FindHwanGyeongByeonSu(char* input) {
-	FILE* HGBS = fopen("HGBS.cdm", "r");
+	FILE* HGBS = fopen(cdm_HGBSCdm, "r");
 	if (!HGBS) {
-		FILE* test = fopen("HGBS.cdm", "w");
-		fprintf(test, "PATH=C:\\\\CDM\\\\StartPick\\\\*;HOME=C:\\\\CDM\\\\UserHome\\\\*");
+		FILE* test = fopen(cdm_HGBSCdm, "w");
+		char cwd[1024];
+		GetCurrentDirectoryA(sizeof(cwd), cwd);
+		fprintf(test, "PATH=C:\\\\CDM\\\\StartPick\\\\*;HOME=C:\\\\CDM\\\\UserHome\\\\*;\
+HGBS=%s", cwd);
 		fclose(test);
+		HGBS = fopen(cdm_HGBSCdm, "r");
 		//return NULL;
 	}
 	char buffer[1024];
 	if (!fgets(buffer, sizeof(buffer), HGBS)) {
-		FILE* test = fopen("HGBS.cdm", "w");
+		FILE* test = fopen(cdm_HGBSCdm, "w");
 		fprintf(test, "PATH=C:\\\\CDM\\\\StartPick\\\\*;HOME=C:\\\\CDM\\\\UserHome\\\\*");
 		fclose(test);
-		//fclose(HGBS);
+		fclose(HGBS);
+		HGBS = fopen(cdm_HGBSCdm, "r");
 		//return NULL;
 	}
 	fclose(HGBS);
@@ -238,7 +244,9 @@ void cdm_Cad(char** argp) {
 		printf("SetCurrentDirectory failed: %lu\n", GetLastError());
 		return;
 	}
-	printf("Changed directory to: %s\n", newDir);
+	strcpy(cdm_HGBSCdm, cdm_TomSaekki("HGBS"));
+	strcat(cdm_HGBSCdm, "\\HGBS.cdm");
+	printf("Changed directory to: %s\n%s\n", newDir, cdm_HGBSCdm);
 }
 
 void cdm_Exit(char** argp) {
@@ -282,6 +290,10 @@ void cdm_Help(char** argp) {
 	printf("  dir [path]      - List files in the specified directory (or current directory if no path is provided)\n");
 	printf("  cls             - Clear the screen\n");
 	printf("  help            - Show this help message\n");
+	printf("  echo [text]     - Print the specified text to the console\n");
+	printf("  set set <key> <value> - Set an environment variable\n");
+	printf("  set see         - Show all environment variables\n");
+	printf("  [command]       - Execute the specified command\n");
 }
 
 void cdm_Echo(char** argp) {
@@ -376,10 +388,10 @@ struct shellp optionSet[] = {
 
 void cdm_Set(char** argp) {
 	//
-	FILE* HGBS = fopen("HGBS.cdm", "r");
+	FILE* HGBS = fopen(cdm_HGBSCdm, "r");
 	if (!HGBS) {
 		printf("Error: Unable to open HGBS.cdm for reading\n");
-		FILE* HGBS = fopen("HGBS.cdm", "w");
+		FILE* HGBS = fopen(cdm_HGBSCdm, "w");
 		fclose(HGBS);
 		HwanGyeongByeonSu = cdm_FindHwanGyeongByeonSu(NULL);
 		for (int j = 0; HwanGyeongByeonSu[j] != NULL; j++) {
@@ -393,7 +405,7 @@ void cdm_Set(char** argp) {
 		return;
 	} //*
 	fclose(HGBS);
-	HGBS = fopen("HGBS.cdm", "w");
+	HGBS = fopen(cdm_HGBSCdm, "w");
 	for (int i = 0; optionSet[i].funifuni != NULL; i++) {
 		if (strcmp(argp[1], optionSet[i].optionString) == 0) {
 			optionSet[i].funifuni(argp);
@@ -462,6 +474,9 @@ static inline int cdm_ioa(char** argp) {
 
 int cdm_ShellMainCode(char** argp) {
 	printf("CDM %s.%s\n(c) FuchsuaProject 2025, 2026\n\n", CDMVersion, CDMBuild);
+	cdm_HGBSCdm = (char*)malloc(260);
+	//cdm_HGBSCdm = cdm_FindNotRomaja(cdm_HyeonjaeDirectoryGyeongro);
+	strcpy(cdm_HGBSCdm, "HGBS.cdm");
 	HwanGyeongByeonSu = cdm_FindHwanGyeongByeonSu(NULL);
 	for (int j = 0; HwanGyeongByeonSu[j] != NULL; j++) {
 		printf("HwanGyeongByeonSu[%d]: %s\n", j, HwanGyeongByeonSu[j]);
