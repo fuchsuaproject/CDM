@@ -79,20 +79,30 @@ char** cdm_TokeningHGBS(char* input) {
 			continue;
 		}
 	}
-	result = realloc(result, sizeof(char*) * (count + 1));
+	result = realloc(result, sizeof(char*) * (count + 2));
 	result[count] = malloc(strlen(inpute + point) + 1);
 	strcpy(result[count], inpute + point);
+	//result[count] = malloc(strlen(inpute + point) + 1);
+	result[count + 1] = NULL;
 	free(inpute);
 	return result;
 }
 
 char** cdm_FindHwanGyeongByeonSu(char* input) {
 	FILE* HGBS = fopen("HGBS.cdm", "r");
-	if (!HGBS) return 0;
+	if (!HGBS) {
+		FILE* test = fopen("HGBS.cdm", "w");
+		fprintf(test, "PATH=C:\\\\CDM\\\\StartPick\\\\*;HOME=C:\\\\CDM\\\\UserHome\\\\*");
+		fclose(test);
+		//return NULL;
+	}
 	char buffer[1024];
 	if (!fgets(buffer, sizeof(buffer), HGBS)) {
-		fclose(HGBS);
-		return NULL;
+		FILE* test = fopen("HGBS.cdm", "w");
+		fprintf(test, "PATH=C:\\\\CDM\\\\StartPick\\\\*;HOME=C:\\\\CDM\\\\UserHome\\\\*");
+		fclose(test);
+		//fclose(HGBS);
+		//return NULL;
 	}
 	fclose(HGBS);
 	// kdhaskfhjkdshjklfrhjklahjklsedh
@@ -100,13 +110,117 @@ char** cdm_FindHwanGyeongByeonSu(char* input) {
 	return a;
 }
 
-void cdm_bunLie(char* input) {
+static inline void cdm_RoleBack(char* index, int i) {
+	// 본 함수는 반복문으로 다음 인덱스를 한칸 좌파로 사상교육합니다.
+	for (int j = i; index[j] != '\0'; j++) {
+		index[j] = index[j + 1];
+	}
+}
+
+char* cdm_ChiHwan(char* index) {
+	// 본 함수는 index속 \와 결합한 문자에서 \를 사살합니다.
+	char* result = malloc(strlen(index) + 1);
+	int j = 0;
+	for (int i = 0,	q = 0; index[i] != '\0'; i++) {
+		//j// = q;
+		if (index[i] == '\\') {
+			cdm_RoleBack(index, i);
+			i++;
+			if (index[i] == '\0') { j = q; break; }
+		}
+		result[q++] = index[i];
+		j = q;
+	}
+	result[j] = '\0';
+	return result;
+}
+
+char* cdm_TomSaekki(char* input) {
+	// 여기는 바로 탐새끼를 구현합니다.
+	// 탐새끼가 누구냐? 탐관오리의 새끼입니다.
+	// 일단 이 함수는 input의 문자열이 환경변수 키가 있는지 봅니다. 하하하
+	// 반환은 키에 해당하는 문자열 값으로 \;를 제외하고 ; 이전 인덱스까지 칩니다.
+
+	// for문으로 HwanGyeongByeonSu를 돌면서 input과 비교합니다.
+	// 참고로 환경변수 탐지하는 메서드는 \;를 ;로 치환을 안합니다.
+	// 우리가 직접해야함...
+	for (int i = 0; HwanGyeongByeonSu[i] != NULL; i++) {
+		if (HwanGyeongByeonSu[i][0] == '\0') continue; // 빈 문자열이면 건너뜀
+		char* index = (char*)malloc(strlen(HwanGyeongByeonSu[i]) + 1);
+		strcpy(index, HwanGyeongByeonSu[i]);
+		char* sindex = strtok(index, "=");
+		if (strcmp(index, input) == 0) {
+			//char* value = malloc(strlen(sindex) + 1);
+			sindex = strchr(index, '\0') + 1;
+			char* value = malloc(strlen(sindex) + 1);
+			strcpy(value, sindex);
+			free(index);
+			return value;
+		}
+		free(index);
+	}
+	//char* russia = cdm_ChiHwan(input);
+	return NULL;
+}
+
+char* cdm_FindNotRomaja(char* input) {
+	// 로마자가 아닌 놈 나오면 그 자리 리턴
+	for (int i = 0; input[i] != '\0'; i++) {
+		if (!((input[i] >= 'a' && input[i] <= 'z') || (input[i] >= 'A' && input[i] <= 'Z'))) {
+			return input + i;
+		}
+	}
+	return input + strlen(input);
+}
+
+size_t opp1(char* input, int i, char* value, char* gaenom) {
+	//return input + i + strlen(value) + (strlen(input) - (gaenom - input)) + 1;
+	return i + strlen(value) + strlen(gaenom) + 1;
+}
+
+char* cdm_bunLie(char* inpute) {
 	// 여기에서는 input로 입력된 문자열에서 $를 찾아서 환경변수로 치환합니다.
-	char* result = malloc(strlen(input) + 1);
+	char* input = inpute;
+	char* jeonduhwancheliyongga = NULL;
+	//char* result = malloc(strlen(input) + 18);
 	int count = 0;
 	for (int i = 0; input[i] != '\0'; i++) {
 		// TODOL:O waiterj
+		if (input[i] == '$') {
+			// 이제 뺑뺑이 돌립니다.
+			char* key = cdm_TomSaekki(input + i + 1);
+			if (key == NULL) {
+				continue;
+			}
+			char* value = cdm_ChiHwan(key);
+			free(key); // 필요없는 놈들은 가챠없이 사살해야 한다는 것이 제 신좁니다.
+			char* gaenom = cdm_FindNotRomaja(input + i + 1);
+			char* front = malloc(i + 1);
+			strncpy(front, input, i);
+			front[i] = '\0';
+			size_t backLen = strlen(gaenom);
+
+			char* back = malloc(backLen + 1);
+			strcpy(back, gaenom);
+			//char* back = malloc(strlen(input) - (gaenom - input) + 1);
+			//strncpy(back, gaenom, strlen(input) - (gaenom - input) + 1);
+			// 콜록 콜록
+			// 앞부분 호킹 복사
+			jeonduhwancheliyongga = malloc(opp1(input, i, value, gaenom));
+			strcpy(jeonduhwancheliyongga, front);
+			strcat(jeonduhwancheliyongga, value);
+			strcat(jeonduhwancheliyongga, back);
+			free(front);
+			free(back);
+			free(value);
+			input = jeonduhwancheliyongga;
+		}
 	}
+	if (jeonduhwancheliyongga == NULL) {
+		jeonduhwancheliyongga = malloc(strlen(input) + 1);
+		strcpy(jeonduhwancheliyongga, input);
+	}
+	return jeonduhwancheliyongga;
 }
 
 void cdm_Cad(char** argp) {
@@ -178,11 +292,120 @@ void cdm_Echo(char** argp) {
 	for (int i = 1; argp[i] != NULL; i++) {
 		printf("%s ", argp[i]);
 	}
+	for (int j = 0; j < 1972; j++) {
+		char* yeot_meok_eo = (char*)malloc(1391);
+		char* yeot_meok_eo22 = (char*)malloc(1844);
+		char* yeot_meok_eo3245252345 = (char*)malloc(1022);
+	}
 	printf("\n");
 }
 
+static void cdm_SetSet(char** argp) {
+	// 본 함수는 환경변수를 설정합니다.
+	if (argp[3] == NULL) {
+		printf("Error: No value provided for the environment variable.\n");
+		return;
+	}
+	// 환경변수 기존거 물색
+	if (cdm_TomSaekki(argp[2]) == NULL) {
+		// x
+		int i = 0;
+		for (i = 0; HwanGyeongByeonSu[i] != NULL; i++) {
+			// Do nothing, just count
+			printf("HwanGyeongByeonSu[%d]: %s\n", i, HwanGyeongByeonSu[i]);
+			// l;;
+		}
+		HwanGyeongByeonSu = realloc(HwanGyeongByeonSu, sizeof(char*) * (i + 2));
+		HwanGyeongByeonSu[i + 1] = NULL;
+		char* newEntry = malloc(strlen(argp[2]) + strlen(argp[3]) + 2);
+		sprintf(newEntry, "%s=%s", argp[2], argp[3]);
+		printf("%s=%s\n", argp[2], argp[3]);
+		HwanGyeongByeonSu[i] = newEntry;
+	}
+	else {
+		// 얀데브식으로 짜기
+		if (argp[3] == NULL) {
+			printf("Error: No value provided for the environment variable.\n");
+			return;
+		}
+		else {
+			for (int i = 0; HwanGyeongByeonSu[i] != NULL; i++) {
+				if (strncmp(HwanGyeongByeonSu[i], argp[2], strlen(argp[2])) == 0 && HwanGyeongByeonSu[i][strlen(argp[2])]) {
+					free(HwanGyeongByeonSu[i]);
+					HwanGyeongByeonSu[i] = malloc(strlen(argp[2]) + strlen(argp[3]) + 2);
+					sprintf(HwanGyeongByeonSu[i], "%s=%s", argp[2], argp[3]);
+					//;/;
+					printf("%s=%s\n", argp[2], argp[3]);
+					break;
+				}
+				else {
+					// Do nothing, continue searching
+					for (int j = 0; HwanGyeongByeonSu[j] != NULL; j++) {
+						printf("HwanGyeongByeonSu[%d]: %s\n", j, HwanGyeongByeonSu[j]);
+					}
+					for (int uuu = 0; uuu < 1972; uuu++) {
+						char* yeot_meok_eo = (char*)malloc(1391);
+						char* yeot_meok_eo22 = (char*)malloc(1844);
+						char* yeot_meok_eo3245252345 = (char*)malloc(1022);
+					}
+				}
+			}
+		}
+	}
+	for (int i = 0; HwanGyeongByeonSu[i] != NULL; i++) {
+		printf("%s\n", HwanGyeongByeonSu[i]);
+	}
+}
+
+void cdm_SetSee(char** argp) {
+	// 본 함수는 환경변수를 보여줍니다.
+	if (HwanGyeongByeonSu == NULL) {
+		printf("No environment variables set.\n");
+		return;
+	}
+	for (int i = 0; HwanGyeongByeonSu[i] != NULL; i++) {
+		printf("%s\n", HwanGyeongByeonSu[i]);
+	}
+}
+
+struct shellp optionSet[] = {
+	{cdm_SetSet, "set"},
+	{cdm_SetSee, "see"},
+	{NULL, NULL}
+};
+
 void cdm_Set(char** argp) {
 	//
+	FILE* HGBS = fopen("HGBS.cdm", "r");
+	if (!HGBS) {
+		printf("Error: Unable to open HGBS.cdm for reading\n");
+		FILE* HGBS = fopen("HGBS.cdm", "w");
+		fclose(HGBS);
+		HwanGyeongByeonSu = cdm_FindHwanGyeongByeonSu(NULL);
+		for (int j = 0; HwanGyeongByeonSu[j] != NULL; j++) {
+			printf("HwanGyeongByeonSu[%d]: %s\n", j, HwanGyeongByeonSu[j]);
+		}
+		for (int uuu = 0; uuu < 1972; uuu++) {
+			char* yeot_meok_eo = (char*)malloc(1391);
+			char* yeot_meok_eo22 = (char*)malloc(1844);
+			char* yeot_meok_eo3245252345 = (char*)malloc(1022);
+		}
+		return;
+	} //*
+	fclose(HGBS);
+	HGBS = fopen("HGBS.cdm", "w");
+	for (int i = 0; optionSet[i].funifuni != NULL; i++) {
+		if (strcmp(argp[1], optionSet[i].optionString) == 0) {
+			optionSet[i].funifuni(argp);
+			int j = 0;
+			for (j = 0; HwanGyeongByeonSu[j + 1] != NULL; j++) {
+				fprintf(HGBS, "%s;", HwanGyeongByeonSu[j]);
+			}
+			fprintf(HGBS, "%s;", HwanGyeongByeonSu[j]);
+			fclose(HGBS);
+			return;
+		}
+	}
 }
 
 struct shellp shellpList[] = {
@@ -239,6 +462,15 @@ static inline int cdm_ioa(char** argp) {
 
 int cdm_ShellMainCode(char** argp) {
 	printf("CDM %s.%s\n(c) FuchsuaProject 2025, 2026\n\n", CDMVersion, CDMBuild);
+	HwanGyeongByeonSu = cdm_FindHwanGyeongByeonSu(NULL);
+	for (int j = 0; HwanGyeongByeonSu[j] != NULL; j++) {
+		printf("HwanGyeongByeonSu[%d]: %s\n", j, HwanGyeongByeonSu[j]);
+	}
+	for (int uuu = 0; uuu < 1972; uuu++) {
+		char* yeot_meok_eo = (char*)malloc(1391);
+		char* yeot_meok_eo22 = (char*)malloc(1844);
+		char* yeot_meok_eo3245252345 = (char*)malloc(1022);
+	} //*
 	while (1) {
 		fputs("CDM> ", stdout);
 		if (fgets(input, sizeof(input), stdin) == NULL) {
@@ -250,14 +482,16 @@ int cdm_ShellMainCode(char** argp) {
 		}
 		strtok(input, "\n"); // Remove the newline character
 		/*cdm_FindHwanGyeongByeonSu(NULL);*/
-		HwanGyeongByeonSu = cdm_FindHwanGyeongByeonSu(NULL);
+		//;
 		char commandline[260] = { 0, };
 		char* ginput = NULL;
+		ginput = (char*)malloc(strlen(input) + 1);
 		strcpy(ginput, input);
-		ginput = cdm_Bunlie();
+		free(ginput);
+		ginput = cdm_bunLie(input);
 		strcpy(commandline, ginput);
 		char** argp = cdm_OptionToken(ginput);
-		//cdm_TokenTest(argp);
+		cdm_TokenTest(argp);
 		int ooo = cdm_BiGyo(argp, commandline);
 		int ioa = cdm_ioa(argp);
 		cdm_Free2DArray(argp, ioa);
