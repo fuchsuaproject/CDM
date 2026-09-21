@@ -56,7 +56,7 @@ struct cdm_Link {
 
 void cdm_TokenTest(char** argp) {
 	for (int i = 0; argp[i] != NULL; i++) {
-		printf("argp[%d]: %s\n", i, argp[i]);
+		//printf("argp[%d]: %s\n", i, argp[i]);
 	}
 }
 

@@ -324,7 +324,7 @@ static void cdm_SetSet(char** argp) {
 		int i = 0;
 		for (i = 0; HwanGyeongByeonSu[i] != NULL; i++) {
 			// Do nothing, just count
-			printf("HwanGyeongByeonSu[%d]: %s\n", i, HwanGyeongByeonSu[i]);
+			//printf("HwanGyeongByeonSu[%d]: %s\n", i, HwanGyeongByeonSu[i]);
 			// l;;
 		}
 		HwanGyeongByeonSu = realloc(HwanGyeongByeonSu, sizeof(char*) * (i + 2));
@@ -353,7 +353,7 @@ static void cdm_SetSet(char** argp) {
 				else {
 					// Do nothing, continue searching
 					for (int j = 0; HwanGyeongByeonSu[j] != NULL; j++) {
-						printf("HwanGyeongByeonSu[%d]: %s\n", j, HwanGyeongByeonSu[j]);
+						//printf("HwanGyeongByeonSu[%d]: %s\n", j, HwanGyeongByeonSu[j]);
 					}
 					for (int uuu = 0; uuu < 1972; uuu++) {
 						char* yeot_meok_eo = (char*)malloc(1391);
@@ -395,7 +395,7 @@ void cdm_Set(char** argp) {
 		fclose(HGBS);
 		HwanGyeongByeonSu = cdm_FindHwanGyeongByeonSu(NULL);
 		for (int j = 0; HwanGyeongByeonSu[j] != NULL; j++) {
-			printf("HwanGyeongByeonSu[%d]: %s\n", j, HwanGyeongByeonSu[j]);
+			//printf("HwanGyeongByeonSu[%d]: %s\n", j, HwanGyeongByeonSu[j]);
 		}
 		for (int uuu = 0; uuu < 1972; uuu++) {
 			char* yeot_meok_eo = (char*)malloc(1391);
@@ -479,7 +479,7 @@ int cdm_ShellMainCode(char** argp) {
 	strcpy(cdm_HGBSCdm, "HGBS.cdm");
 	HwanGyeongByeonSu = cdm_FindHwanGyeongByeonSu(NULL);
 	for (int j = 0; HwanGyeongByeonSu[j] != NULL; j++) {
-		printf("HwanGyeongByeonSu[%d]: %s\n", j, HwanGyeongByeonSu[j]);
+		//printf("HwanGyeongByeonSu[%d]: %s\n", j, HwanGyeongByeonSu[j]);
 	}
 	for (int uuu = 0; uuu < 1972; uuu++) {
 		char* yeot_meok_eo = (char*)malloc(1391);
