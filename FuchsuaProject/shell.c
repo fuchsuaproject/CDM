@@ -194,13 +194,21 @@ char* cdm_bunLie(char* inpute) {
 		// TODOL:O waiterj
 		if (input[i] == '$') {
 			// 이제 뺑뺑이 돌립니다.
-			char* key = cdm_TomSaekki(input + i + 1);
+			char* gaenom = cdm_FindNotRomaja(input + i + 1);
+
+			size_t keyLen = gaenom - (input + i + 1);
+			char* keyName = malloc(keyLen + 1);
+
+			strncpy(keyName, input + i + 1, keyLen);
+			keyName[keyLen] = '\0';
+			char* key = cdm_TomSaekki(keyName);
+			free(keyName);
 			if (key == NULL) {
 				continue;
 			}
 			char* value = cdm_ChiHwan(key);
 			free(key); // 필요없는 놈들은 가챠없이 사살해야 한다는 것이 제 신좁니다.
-			char* gaenom = cdm_FindNotRomaja(input + i + 1);
+			//char* gaenom = cdm_FindNotRomaja(input + i + 1);
 			char* front = malloc(i + 1);
 			strncpy(front, input, i);
 			front[i] = '\0';

@@ -60,31 +60,96 @@ void cdm_TokenTest(char** argp) {
 	}
 }
 
+static inline char* cdm_Token1(char* input, char* delimiter, char* exept, int i, int* isExept) {
+	if (exept != NULL && input[i] == exept[0]) {
+		(*isExept)++;
+		return NULL;
+	}
+	input[i] = '\0';
+	return &input[i + 1];
+}
+static inline void cdm_Token2(int parasolmiter, int* isExept) {
+	if (parasolmiter) {
+		(*isExept)--;
+	}
+}
+
+//char
+char* sebo = NULL;
+int isExept = 0;
+
+char* cdm_TokenInString(char* input, char* delimiter, char* exept) {
+	volatile char* dinput = NULL;
+	int DirectCall = 0;
+	for (int i = 0; input != NULL && input[i] != '\0'; i++) {
+		printf("p\n");
+		if (isExept == 0 && input[i] == delimiter[0]) {
+			sebo = cdm_Token1(input, delimiter, exept, i, &isExept);
+			if (sebo != NULL) {
+				return input;
+			}
+		}
+		else if (isExept) {
+			cdm_Token2(exept[0] == input[i], &isExept);
+		}
+		dinput = input;
+	}
+	char* domi = sebo;
+	for (int j = 0; input == NULL && sebo != NULL && sebo[j] != '\0'; j++) {
+		if (DirectCall == 1) {
+			sebo = NULL;
+			break;
+		}
+		printf("pa\n");
+		if (isExept == 0 && sebo[j] == delimiter[0]) {
+			sebo = cdm_Token1(sebo, delimiter, exept, j, &isExept);
+			if (sebo != NULL) {
+				return domi;
+			}
+		}
+		else if (isExept) {
+			cdm_Token2(exept[0] == sebo[j], &isExept);
+		}
+		if (sebo[j + 2] == '\0') {
+			dinput = sebo;
+			//sebo = NULL;
+			DirectCall == 1;
+		}
+		dinput = sebo;
+	}
+	//volatile __asm("sub rax 4");
+	return dinput;
+}
+
 char** cdm_OptionToken(char* input) {
-	char* token = strtok(input, " ");
+	char* token = cdm_TokenInString(input, " ", "\"");
 	int tokenLen = 0;
 	char** argp = NULL;
 	int count = 0;
 	int isDDaomPyo = 0;
 	while (token != NULL) {
-		if (token[0] == '\"') {
+		printf("jjj\n");
+		if (0 && token[0] == '\"') {
 			isDDaomPyo = 1;
 			token++;
 			//조치
 			
 		}
 		if (isDDaomPyo == 1) {
+			// 아래 것 무시하고 짜면은;
 			char* eee = NULL;
 			////cdm_eee(token, eee);
-			char* l0 = strchr(token, '\0');
-			l0[0] = ' ';
-			char* newToken = strtok(NULL, "\"");
+			/*char* l0 = strchr(token, '\"');
+			if (l0 != NULL){
+				l0[0] = '\0';
+			}*/
+			//char* newToken = strtok(NULL, "\"");
 			tokenLen = strlen(token);
 			argp = realloc(argp, sizeof(char*) * (count + 1));
 			argp[count] = malloc(tokenLen + 1);
 			strcpy(argp[count], token);
-			token = newToken;
-			token = strtok(NULL, " ");
+			//token = newToken;
+			token = cdm_TokenInString(NULL, " ", "\"");
 			count++;
 			isDDaomPyo = 0;
 			continue;
@@ -94,7 +159,7 @@ char** cdm_OptionToken(char* input) {
 		argp = realloc(argp, sizeof(char*) * (count + 1));
 		argp[count] = malloc(tokenLen + 1);
 		strcpy(argp[count], token);
-		token = strtok(NULL, " ");
+		token = cdm_TokenInString(NULL, " ", "\"");
 		count++;
 	}
 	argp = realloc(argp, sizeof(char*) * (count + 1));
