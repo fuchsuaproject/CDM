@@ -53,6 +53,9 @@
     <ClCompile Include="filesystem.c">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="DanLua.c">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="Data\202503180651.txt" />

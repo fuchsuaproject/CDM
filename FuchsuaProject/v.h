@@ -56,7 +56,10 @@
 
 // h
 
-int cdm_ShellMainCode(int eMode);
+char* NextToken(int* crrstr, char* rshptr);
+void cdm_TokeningTest(char** argp);
+
+int cdm_ShellMainCode(char** argp);
 int cdm_DirectoryToChar(char directory[2048][260], char charChar[260]);
 int cdm_CharToDirectory(char charChar[260], char directory[2048][260]);
 int cdm_FindDirectorySize(char directory[2048][260]);

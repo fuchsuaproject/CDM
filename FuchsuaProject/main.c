@@ -113,7 +113,7 @@ char* cdm_TokenInString(char* input, char* delimiter, char* exept) {
 		if (sebo[j + 2] == '\0') {
 			dinput = sebo;
 			//sebo = NULL;
-			DirectCall == 1;
+			DirectCall = 1;
 		}
 		dinput = sebo;
 	}
@@ -174,7 +174,7 @@ void cdm_Free2DArray(char** array, int size) {
 	free(array);
 }
 
-struct cdm_Link cdm_LinkList[] = { {cdm_ShellMainCode, "shell\n"},  {NULL, NULL}};
+struct cdm_Link cdm_LinkList[] = { {cdm_ShellMainCode, "shell\n"}, {cdm_TokeningTest, "utst\n"},  {NULL, NULL}};
 static inline void cdm_Arg1(char** argp);
 static inline void cdm_Arg0() {
 	char** argp = NULL;
