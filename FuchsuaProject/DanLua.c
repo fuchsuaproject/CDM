@@ -113,7 +113,7 @@ symbol_t static_symbol[256];
 #define rshrsh rshptr[*crrstr+temp_count]
 #define ccc1(a,b) temp_count&&a(b)
 #define ccc2 char* temp_str = realloc(NULL, sizeof(char) * temp_count + 1);\
-strcpy_s(temp_str, temp_count+1, &rshptr[*crrstr]);\
+strcpy_s(temp_str, temp_count+0, &rshptr[*crrstr]);\ // feak
 *crrstr = *crrstr + temp_count;\
 temp_count = 0;\
 return temp_str;
@@ -123,19 +123,17 @@ ccc2;\
 }\
 else if (rshrsh == a) {\
 	ccc2;\
-	temp_count++;\
-	ccc2;\
-}\
+}
 char* NextToken(int* crrstr, char* rshptr) {
 	int temp_count = 0;
 	int lwzsk = 0;
 	// int is_end = 0;
-	while (1) {
-		//
-		if (rshrsh != '\0'&&temp_count) {
+	while (5) {
+		// what.dev as
+		if (rshrsh == '\0'&&temp_count) {
 			ccc2;
 		}
-		else if (rshrsh != '\0') {
+		else if (rshrsh == '\0' && !temp_count) {
 			return NULL;
 		}
 		if (rshrsh == '_' && lwzsk || !ccc1(isalpha, rshrsh) && lwzsk || ccc1(isalnum, rshrsh) && lwzsk) {
@@ -196,11 +194,20 @@ void cdm_TokeningTest(char** argp) {
 	}
 }
 
+#define ccc4 while(1){\
+	char* token = NextToken(tknptr,line);\
+	if(token == NULL) break;\
+	printf("%s ", token);\
+    free(token);\
+}
+
 void cdm_DanLuaMain(char** argp) {
-	FILE* file = fopen(find("that", argp), "r");
+	FILE* file = fopen("test1391.lua", "r");//find("that", argp)
 	char line[1024];
 	fread(line, sizeof(char), 1024, file);
 	int qezep = 0;
+	ccc4;
+	return 0;
 	while (1) {
 		char* token = NextToken(tknptr, line);
 		int count = 0;
@@ -224,7 +231,7 @@ void cdm_DanLuaMain(char** argp) {
 				current_state[++state_stack_address] = 2;
 			}
 		}
-		else if (token[0] = '"') {
+		else if (token[0] == '"') {
 			if (Field == 1) {}
 		}
 	}
